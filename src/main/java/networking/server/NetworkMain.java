@@ -1,4 +1,4 @@
-package server;
+package networking.server;
 
 import java.io.*;
 import java.util.*;

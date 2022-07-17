@@ -1,10 +1,8 @@
-package client;
+package networking.client;
 
 import java.io.IOException;
 import java.io.*;
-import java.net.*;
 import java.util.List;
-import java.util.Scanner;
 
 public class ClientNetworkThread extends Thread{
 	

@@ -1,11 +1,7 @@
 package com.example.javafxtest;
 
-import client.NetworkClient;
-import client.NetworkObserver;
 import javafx.application.Application;
 import javafx.event.EventHandler;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
@@ -17,10 +13,10 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.stage.Stage;
-import server.NetworkServer;
+import networking.client.NetworkClient;
+import networking.client.NetworkObserver;
 
-
-import java.io.IOException;
+;
 
 public class HelloApplication extends Application {
 
