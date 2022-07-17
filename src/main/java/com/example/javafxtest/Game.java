@@ -1,6 +1,6 @@
 package com.example.javafxtest;
 
-import javafx.application.Platform;
+import javafx.animation.AnimationTimer;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -13,14 +13,13 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import networking.client.NetworkClient;
-import networking.client.NetworkObserver;
 
 public class Game {
     Canvas[] canvases;
-    private NetworkClient client;
-    Game(Stage primaryStage, NetworkClient client){
+    private NetworkClient networkClient;
+    Game(Stage primaryStage, NetworkClient client) {
         canvases = new Canvas[64];
-        this.client = client;
+        this.networkClient = client;
         GridPane grid = new GridPane();
 
         for(int j=0; j<64; j++){
@@ -53,7 +52,7 @@ public class Game {
 
     }
 
-    private void initDraw(GraphicsContext gc){
+    private void initDraw(GraphicsContext gc) {
         double canvasWidth = gc.getCanvas().getWidth();
         double canvasHeight = gc.getCanvas().getHeight();
 
@@ -73,28 +72,27 @@ public class Game {
         gc.setLineWidth(1);
     }
 
-    private void makeCanvasDrawable(GraphicsContext graphicsContext, Canvas canvas){
+    private void makeCanvasDrawable(GraphicsContext graphicsContext, Canvas canvas) {
         PixelWriter pWriter = graphicsContext.getPixelWriter();
         PixelWriter finalPWriter = pWriter;
         int thisCanvasId = Integer.parseInt(canvas.getId());
-        client.addObserver(new NetworkObserver() {
-            //something here is wrong. *****
-            ///////////////*******************
-            /////******************************
+        // This should be in another function
+        AnimationTimer animationTimer = new AnimationTimer() {
             @Override
-            public void messageReceived(String message) {
-                Platform.runLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        DrawInfo info = DrawInfo.fromJson(message);
-                        int canvasId = info.getCanvasId();
-                        PixelWriter messagePWriter = canvases[canvasId].getGraphicsContext2D().getPixelWriter();
-                        messagePWriter.setColor((int)Math.round(info.getX()), (int)Math.round(info.getY()), Color.BLUE);
-                    }
-                });
+            public void handle(long l) {
+                // Only try to draw if the queue has something to draw
+                if(networkClient.networkInputs.areInputsAvailable()) {
+                    DrawInfo info = networkClient.networkInputs.getNextInput();
+                    PixelWriter pWriter = canvases[info.getCanvasId()].getGraphicsContext2D().getPixelWriter();
 
+                    // Having the rounding math done on the main thread may cause unneeded lag
+                    // It may be more efficient to do this rounding in another thread so the values are pre-rounded
+                    pWriter.setColor((int)Math.round(info.getX()), (int)Math.round(info.getY()), Color.BLUE);
+                }
             }
-        });
+        };
+
+        animationTimer.start();
 
         pWriter = graphicsContext.getPixelWriter();
         canvas.addEventHandler(MouseEvent.MOUSE_PRESSED,
@@ -108,7 +106,7 @@ public class Game {
                         graphicsContext.moveTo(event.getX(), event.getY());
                         graphicsContext.stroke();
 
-                        client.sendMessage(DrawInfo.toJson(new DrawInfo(thisCanvasId, event.getX(), event.getY())));
+                        networkClient.sendMessage(DrawInfo.toJson(new DrawInfo(thisCanvasId, event.getX(), event.getY())));
                     }
                 });
 
@@ -122,7 +120,7 @@ public class Game {
                         graphicsContext.lineTo(event.getX(), event.getY());
                         graphicsContext.stroke();
 
-                        client.sendMessage(DrawInfo.toJson(new DrawInfo(thisCanvasId, event.getX(), event.getY())));
+                        networkClient.sendMessage(DrawInfo.toJson(new DrawInfo(thisCanvasId, event.getX(), event.getY())));
                     }
                 });
 
