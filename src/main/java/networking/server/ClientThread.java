@@ -19,13 +19,14 @@ public class ClientThread extends Thread {
 			BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
 			server.clientOutputs.add(output);
-			
+			server.clientSockets.add(socket);
+
 			String msg;
 			
 			while(true) {
 				msg = input.readLine();
 				
-				server.messageQueue.put(msg);
+				server.messageQueue.put(new ServerMessage(msg, socket.hashCode()));
 			}
 		}
 		catch(IOException ex) {
