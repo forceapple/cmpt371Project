@@ -83,6 +83,7 @@ public class Game {
             /////******************************
             @Override
             public void messageReceived(String message) {
+
                 Platform.runLater(new Runnable() {
                     @Override
                     public void run() {

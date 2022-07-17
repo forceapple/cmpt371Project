@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.*;
 import java.util.List;
 
-public class ClientNetworkThread extends Thread{
+public class ClientNetworkThread extends Thread {
 	
 	private BufferedReader input;
 	private List<NetworkObserver> observers;
