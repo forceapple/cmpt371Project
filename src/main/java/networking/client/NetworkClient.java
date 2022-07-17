@@ -1,5 +1,7 @@
 package networking.client;
 
+import com.example.javafxtest.DrawInfo;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -7,6 +9,7 @@ import java.io.PrintWriter;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class NetworkClient {
     private ClientNetworkThread networkThread;
@@ -14,9 +17,13 @@ public class NetworkClient {
     private BufferedReader input;
     private Socket socket;
     private List<NetworkObserver> observers;
+    public final InputHandler networkInputs;
+
 
     public NetworkClient() {
         observers = new ArrayList<>();
+        networkInputs = new InputHandler();
+        addObserver(networkInputs);
 
         try {
             socket = new Socket("127.0.0.1", 7070);
@@ -46,6 +53,27 @@ public class NetworkClient {
 
     public void sendMessage(String msg) {
         output.println(msg);
+    }
+
+    public class InputHandler implements NetworkObserver {
+        private final ConcurrentLinkedQueue<DrawInfo> drawInfoQueue;
+
+        private InputHandler() {
+            drawInfoQueue = new ConcurrentLinkedQueue<>();
+        }
+
+        public boolean areInputsAvailable() {
+            return !drawInfoQueue.isEmpty();
+        }
+
+        public DrawInfo getNextInput() {
+            return drawInfoQueue.poll();
+        }
+
+        @Override
+        public void messageReceived(String message) {
+            drawInfoQueue.add(DrawInfo.fromJson(message));
+        }
     }
 
 }
