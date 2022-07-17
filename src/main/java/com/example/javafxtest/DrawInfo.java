@@ -1,13 +1,15 @@
 package com.example.javafxtest;
 
 import com.google.gson.Gson;
-import javafx.scene.paint.Color;
 
 public class DrawInfo {
     public double x;
     public double y;
+    public int canvasId;
 
-    public DrawInfo(double x, double y) {
+
+    public DrawInfo(int id, double x, double y) {
+        this.canvasId = id;
         this.x = x;
         this.y = y;
     }
@@ -18,6 +20,10 @@ public class DrawInfo {
 
     public double getY() {
         return y;
+    }
+
+    public int getCanvasId() {
+        return canvasId;
     }
 
 

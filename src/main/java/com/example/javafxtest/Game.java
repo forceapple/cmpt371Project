@@ -75,11 +75,17 @@ public class Game {
     private void makeCanvasDrawable(GraphicsContext graphicsContext, Canvas canvas){
         PixelWriter pWriter = graphicsContext.getPixelWriter();
         PixelWriter finalPWriter = pWriter;
+        int thisCanvasId = Integer.parseInt(canvas.getId());
         client.addObserver(new NetworkObserver() {
+            //something here is wrong. *****
+            ///////////////*******************
+            /////******************************
             @Override
             public void messageReceived(String message) {
                 DrawInfo info = DrawInfo.fromJson(message);
-                finalPWriter.setColor((int)Math.round(info.getX()), (int)Math.round(info.getY()), Color.BLUE);
+                int canvasId = info.getCanvasId();
+                PixelWriter messagePWriter = canvases[canvasId].getGraphicsContext2D().getPixelWriter();
+                messagePWriter.setColor((int)Math.round(info.getX()), (int)Math.round(info.getY()), Color.BLUE);
 
             }
         });
@@ -96,7 +102,7 @@ public class Game {
                         graphicsContext.moveTo(event.getX(), event.getY());
                         graphicsContext.stroke();
 
-                        client.sendMessage(DrawInfo.toJson(new DrawInfo(event.getX(), event.getY())));
+                        client.sendMessage(DrawInfo.toJson(new DrawInfo(thisCanvasId, event.getX(), event.getY())));
                     }
                 });
 
@@ -110,7 +116,7 @@ public class Game {
                         graphicsContext.lineTo(event.getX(), event.getY());
                         graphicsContext.stroke();
 
-                        client.sendMessage(DrawInfo.toJson(new DrawInfo(event.getX(), event.getY())));
+                        client.sendMessage(DrawInfo.toJson(new DrawInfo(thisCanvasId, event.getX(), event.getY())));
                     }
                 });
 
