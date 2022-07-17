@@ -87,7 +87,7 @@ public class Game {
 
                     // Having the rounding math done on the main thread may cause unneeded lag
                     // It may be more efficient to do this rounding in another thread so the values are pre-rounded
-                    pWriter.setColor((int)Math.round(info.getX()), (int)Math.round(info.getY()), Color.BLUE);
+                    pWriter.setColor((int)Math.round(info.getX()), (int)Math.round(info.getY()), info.getColor());
                 }
             }
         };
@@ -106,7 +106,7 @@ public class Game {
                         graphicsContext.moveTo(event.getX(), event.getY());
                         graphicsContext.stroke();
 
-                        networkClient.sendMessage(DrawInfo.toJson(new DrawInfo(thisCanvasId, event.getX(), event.getY())));
+                        networkClient.sendMessage(DrawInfo.toJson(new DrawInfo(thisCanvasId, event.getX(), event.getY(), Color.BLUE)));
                     }
                 });
 
@@ -120,7 +120,7 @@ public class Game {
                         graphicsContext.lineTo(event.getX(), event.getY());
                         graphicsContext.stroke();
 
-                        networkClient.sendMessage(DrawInfo.toJson(new DrawInfo(thisCanvasId, event.getX(), event.getY())));
+                        networkClient.sendMessage(DrawInfo.toJson(new DrawInfo(thisCanvasId, event.getX(), event.getY(), Color.BLUE)));
                     }
                 });
 
