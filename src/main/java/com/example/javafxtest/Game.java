@@ -1,5 +1,6 @@
 package com.example.javafxtest;
 
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -82,10 +83,15 @@ public class Game {
             /////******************************
             @Override
             public void messageReceived(String message) {
-                DrawInfo info = DrawInfo.fromJson(message);
-                int canvasId = info.getCanvasId();
-                PixelWriter messagePWriter = canvases[canvasId].getGraphicsContext2D().getPixelWriter();
-                messagePWriter.setColor((int)Math.round(info.getX()), (int)Math.round(info.getY()), Color.BLUE);
+                Platform.runLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        DrawInfo info = DrawInfo.fromJson(message);
+                        int canvasId = info.getCanvasId();
+                        PixelWriter messagePWriter = canvases[canvasId].getGraphicsContext2D().getPixelWriter();
+                        messagePWriter.setColor((int)Math.round(info.getX()), (int)Math.round(info.getY()), Color.BLUE);
+                    }
+                });
 
             }
         });
