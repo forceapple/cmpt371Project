@@ -1,13 +1,14 @@
 package com.example.javafxtest;
 
 import javafx.animation.AnimationTimer;
-import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.PixelReader;
 import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
@@ -141,9 +142,47 @@ public class Game {
                 new EventHandler<MouseEvent>(){
                     @Override
                     public void handle(MouseEvent event) {
+                        double fillPercentage = computeFillPercentage(graphicsContext);
+                        System.out.println("filled %: " + fillPercentage);
                         networkClient.releaseCanvas();
+
+
                     }
                 });
+    }
+
+
+
+    private double computeFillPercentage(GraphicsContext graphicsContext) {
+
+        // converts canvas cell to a writable image
+        WritableImage image = graphicsContext.getCanvas().snapshot(null, null);
+
+        // obtains PixelReader from the snap
+        PixelReader pixelReader = image.getPixelReader();
+
+        double snapHeight = image.getHeight();
+        double snapWidth = image.getWidth();
+        double coloredPixels = 0;
+        double totalPixels = (snapHeight * snapWidth);
+
+        String hexColor = String.valueOf(networkClient.clientColor);
+
+        // computes the number of colored pixels
+        for (int readY = 0; readY < snapHeight; readY++) {
+            for (int readX = 0; readX < snapWidth; readX++) {
+                Color color = pixelReader.getColor(readX, readY);
+
+                // checks if a pixel is colored with PenColor
+                if (color.toString().equals(hexColor)) {
+                    coloredPixels += 1;
+                }
+            }
+        }
+
+        // computes colored area percentage
+        double fillPercentage = (coloredPixels / totalPixels) * 100.0;
+        return fillPercentage;
     }
 
 }
