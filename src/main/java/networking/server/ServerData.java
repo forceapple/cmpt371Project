@@ -6,9 +6,9 @@ import java.util.*;
 import java.util.concurrent.*;
 
 class ServerData {
-	
+
+	// Clients are identified via the hash of the socket obtained through the socket.HashCode() method
 	private static ServerData instance = null;
-	
 	public final LinkedBlockingQueue<ServerMessage> messageQueue;
 	public final List<Socket> clientSockets;
 	public final List<PrintWriter> clientOutputs;
@@ -40,6 +40,14 @@ class ServerData {
 
 	public int clientCount() {
 		return clientOutputs.size();
+	}
+
+	public void removeClient(Socket clientSocket, PrintWriter clientOutput) {
+		clientSockets.remove(clientSocket);
+		clientOutputs.remove(clientOutput);
+
+		clientColors.remove(clientSocket.hashCode());
+		canvasesInUse.remove(clientSocket.hashCode());
 	}
 }
 

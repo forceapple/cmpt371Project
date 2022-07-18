@@ -27,10 +27,19 @@ public class ClientThread extends Thread {
 				processMessage(input.readLine());
 			}
 		}
+		// SocketException should mean that the client disconnected
+		catch(SocketException ex) {
+			server.removeClient(socket, output);
+
+			// Not sure if the output is closed at this point, but it shouldn't hurt to explicitly close it
+			output.close();
+		}
 		catch(IOException ex) {
 			System.out.println("Exception on Server: " + ex.getMessage());
 			ex.printStackTrace();
 		}
+
+		System.out.println("Client Thread Stopping");
 	}
 
 	private void processMessage(String msg) {
@@ -60,9 +69,6 @@ public class ClientThread extends Thread {
 			// TODO: Don't throw exception on server, instead sent some error to client
 			throw new IllegalArgumentException("Invalid Message Being Sent over network");
 		}
-
-
-
 	}
 
 	private void processDrawMessage(String data) {
