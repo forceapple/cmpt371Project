@@ -1,6 +1,7 @@
 package com.example.javafxtest;
 
 import javafx.animation.AnimationTimer;
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -68,7 +69,7 @@ public class Game {
                 canvasHeight);  //height of the rectangle
 
         gc.setFill(Color.RED);
-        gc.setStroke(Color.BLUE);
+        gc.setStroke(networkClient.clientColor);
         gc.setLineWidth(1);
     }
 
@@ -100,13 +101,19 @@ public class Game {
 
                     @Override
                     public void handle(MouseEvent event) {
-                        finalPWriter.setColor((int)Math.round(event.getX()), (int)Math.round(event.getY()), Color.BLUE);
+
+                        // If the canvas isn't drawable then something should indicate this to the player
+                        if(!networkClient.selectCanvasForDrawing(thisCanvasId)) {
+                            return;
+                        }
+
+                        finalPWriter.setColor((int)Math.round(event.getX()), (int)Math.round(event.getY()), networkClient.clientColor);
 
                         graphicsContext.beginPath();
                         graphicsContext.moveTo(event.getX(), event.getY());
                         graphicsContext.stroke();
 
-                        networkClient.sendMessage(DrawInfo.toJson(new DrawInfo(thisCanvasId, event.getX(), event.getY(), Color.BLUE)));
+                        networkClient.sendDrawingMessage(DrawInfo.toJson(new DrawInfo(thisCanvasId, event.getX(), event.getY(), networkClient.clientColor)));
                     }
                 });
 
@@ -114,13 +121,19 @@ public class Game {
                 new EventHandler<MouseEvent>(){
                     @Override
                     public void handle(MouseEvent event) {
+
+                        if(networkClient.currentCanvasID != thisCanvasId) {
+                            return;
+                        }
+
+
                         System.out.println("x: " + event.getX() + ", y: " + event.getY());
                         System.out.println(canvas.getId());
-                        finalPWriter.setColor((int)Math.round(event.getX()), (int)Math.round(event.getY()), Color.BLUE);
+                        finalPWriter.setColor((int)Math.round(event.getX()), (int)Math.round(event.getY()), networkClient.clientColor);
                         graphicsContext.lineTo(event.getX(), event.getY());
                         graphicsContext.stroke();
 
-                        networkClient.sendMessage(DrawInfo.toJson(new DrawInfo(thisCanvasId, event.getX(), event.getY(), Color.BLUE)));
+                        networkClient.sendDrawingMessage(DrawInfo.toJson(new DrawInfo(thisCanvasId, event.getX(), event.getY(), networkClient.clientColor)));
                     }
                 });
 
@@ -128,7 +141,7 @@ public class Game {
                 new EventHandler<MouseEvent>(){
                     @Override
                     public void handle(MouseEvent event) {
-
+                        networkClient.releaseCanvas();
                     }
                 });
     }
