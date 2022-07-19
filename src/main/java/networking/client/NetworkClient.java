@@ -32,7 +32,7 @@ public class NetworkClient {
     private boolean serverResponseBool;
 
 
-    public NetworkClient() {
+    public NetworkClient(String host) {
         observers = new ArrayList<>();
         networkInputs = new InputHandler();
         addObserver(networkInputs);
@@ -41,7 +41,7 @@ public class NetworkClient {
         currentCanvasID = -1;
 
         try {
-            socket = new Socket("173.181.35.192", 7070);
+            socket = new Socket(host, 7070);
             output = new PrintWriter(socket.getOutputStream(), true);
             input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
