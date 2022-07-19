@@ -6,8 +6,8 @@ import java.util.List;
 
 public class ClientNetworkThread extends Thread {
 	
-	private BufferedReader input;
-	private List<NetworkObserver> observers;
+	private final BufferedReader input;
+	private final List<NetworkObserver> observers;
 	
 	public ClientNetworkThread(BufferedReader input, List<NetworkObserver> observers) {
 		this.input = input;

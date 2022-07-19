@@ -5,6 +5,10 @@ import java.net.Socket;
 import java.util.*;
 import java.util.concurrent.*;
 
+/**
+ * A singleton class that contains all the data that needs to be shared across the different server threads
+ * Accessing variables is not thread safe so manual synchronization is required.
+ */
 class ServerData {
 
 	// Clients are identified via the hash of the socket obtained through the socket.HashCode() method

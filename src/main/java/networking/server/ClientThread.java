@@ -7,9 +7,15 @@ import java.io.*;
 import java.net.*;
 
 @SuppressWarnings("SynchronizeOnNonFinalField") // To disable warning about synchronizing on output
+/**
+ * ClientThread is the thread that is created for every new client that connects to the server.
+ * It handles all the messages sent to the server from the client and is also responsible for sending responses
+ */
 public class ClientThread extends Thread {
 	private final Socket socket;
 	private final ServerData server;
+
+	// Using output in any way requires synchronization since the output can be accessed by other threads at any time
 	private PrintWriter output;
 	private BufferedReader input;
 	public ClientThread(Socket socket) {
@@ -26,7 +32,6 @@ public class ClientThread extends Thread {
 
 			synchronized(server.clientOutputs) {
 				server.clientOutputs.add(output);
-
 			}
 			synchronized (server.clientSockets) {
 				server.clientSockets.add(socket);
@@ -69,6 +74,7 @@ public class ClientThread extends Thread {
 		String header = msg.split("-", 2)[0];
 		String data = msg.split("-", 2)[1];
 
+		// Call the appropriate function based on the header
 		switch (header) {
 			case NetworkMessage.DRAW_MESSAGE_HEADER:
 				processDrawMessage(data);
@@ -127,6 +133,7 @@ public class ClientThread extends Thread {
 		int canvasID = Integer.parseInt(data);
 
 		synchronized(server.canvasesInUse) {
+			// Send true or false depending on if the canvas is already owned
 			if(server.canvasesInUse.containsValue(canvasID) && server.canvasesInUse.get(socket.hashCode()) != canvasID) {
 				synchronized(output) {
 					output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(false)));

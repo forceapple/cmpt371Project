@@ -13,12 +13,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+/**
+ * The NetworkClient facilitates communication between the local game and the network server.
+ * All communication between the two should be done via this class.
+ */
 public class NetworkClient {
-    private ClientNetworkThread networkThread;
     private PrintWriter output;
     private BufferedReader input;
     private Socket socket;
-    private List<NetworkObserver> observers;
+    private final List<NetworkObserver> observers;
 
     public Color clientColor = null;
     public final InputHandler networkInputs;
@@ -28,6 +31,7 @@ public class NetworkClient {
     // serverResponseBoolSync is only used as a synchronization lock for serverResponseBool
     // This thread will call await() on serverResponseSync, and it will be woken up
     // when there is a server response which is saved in serverResponseBool
+    // This is honestly a messy approach. It might be better to change this in the future
     private final Boolean serverResponseBoolSync;
     private boolean serverResponseBool;
 
@@ -52,7 +56,7 @@ public class NetworkClient {
             e.printStackTrace();
         }
 
-        networkThread = new ClientNetworkThread(input, observers);
+        ClientNetworkThread networkThread = new ClientNetworkThread(input, observers);
         networkThread.setName("Client Network Thread");
         networkThread.setDaemon(true);
         networkThread.start();
@@ -166,7 +170,12 @@ public class NetworkClient {
         output.println(NetworkMessage.generateDrawMessage(draw));
     }
 
+    /**
+     * An implementation of the NetworkObserver interface.
+     * Handles receiving information from the server.
+     */
     public class InputHandler implements NetworkObserver {
+        // This queue contains all the DrawInfo objects received from the server
         private final ConcurrentLinkedQueue<DrawInfo> drawInfoQueue;
 
         private InputHandler() {
@@ -181,6 +190,11 @@ public class NetworkClient {
             return drawInfoQueue.poll();
         }
 
+        /**
+         * This function is called everytime the client receives any message from the server.
+         * Note: This function runs in the ClientNetworkThread
+         * @param message The message received from the server
+         */
         @Override
         public void messageReceived(String message) {
             String header = message.split("-", 2)[0];
