@@ -45,8 +45,6 @@ public class ClientThread extends Thread {
 
 	private void processMessage(String msg) {
 
-		System.out.println(msg);
-
 		String header = msg.split("-", 2)[0];
 		String data = msg.split("-", 2)[1];
 
@@ -73,14 +71,6 @@ public class ClientThread extends Thread {
 	}
 
 	private void processDrawMessage(String header, String data) {
-
-		try {
-			server.messageQueue.put(new ServerMessage(header, data, socket.hashCode()));
-		}
-		catch(InterruptedException ex) {
-			ex.printStackTrace();
-		}
-
 		DrawInfo info = DrawInfo.fromJson(data);
 
 		int colorHash = info.getColor().hashCode();
@@ -95,7 +85,12 @@ public class ClientThread extends Thread {
 			throw new IllegalStateException("Attempting to draw on an canvas that isn't registered to the user");
 		}
 
-
+		try {
+			server.messageQueue.put(new ServerMessage(header, data, socket.hashCode()));
+		}
+		catch(InterruptedException ex) {
+			ex.printStackTrace();
+		}
 	}
 
 	private void processCanvasRequest(String header, String data) {

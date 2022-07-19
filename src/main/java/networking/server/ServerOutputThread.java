@@ -17,12 +17,9 @@ public class ServerOutputThread extends Thread{
 		while(true) {
 			try {
 				msg = server.messageQueue.take();
-				processDrawMessage(msg);
-
-				System.out.println("Header: " + msg.header);
 
 				if(msg.header.equals(NetworkMessage.DRAW_MESSAGE_HEADER)) {
-					//processDrawMessage(msg);
+					processDrawMessage(msg);
 				}
 
 			}
@@ -34,7 +31,7 @@ public class ServerOutputThread extends Thread{
 	}
 
 	private void processDrawMessage(ServerMessage message) {
-		System.out.println("processDrawMessage: " + message.generateFullMessage());
+
 		for(int i = 0; i < server.clientCount(); i++) {
 
 			// Send the message to everyone except the one who sent it
