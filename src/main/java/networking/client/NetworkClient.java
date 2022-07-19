@@ -41,7 +41,7 @@ public class NetworkClient {
         currentCanvasID = -1;
 
         try {
-            socket = new Socket("127.0.0.1", 7070);
+            socket = new Socket("173.181.35.192", 7070);
             output = new PrintWriter(socket.getOutputStream(), true);
             input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
