@@ -58,11 +58,11 @@ public class NetworkClient {
         networkThread.start();
     }
 
-    public void addObserver(NetworkObserver obs) {
+    private void addObserver(NetworkObserver obs) {
         this.observers.add(obs);
     }
 
-    public void removeObserver(NetworkObserver obs) {
+    private void removeObserver(NetworkObserver obs) {
         this.observers.remove(obs);
     }
 
@@ -106,6 +106,8 @@ public class NetworkClient {
      * @return true on success, false on failure
      */
     public boolean selectCanvasForDrawing(int canvasId) {
+        // Should default to false in timeout
+        serverResponseBool = false;
 
         if(!clientRunning) {
             throw new IllegalStateException("Attempting to select canvas without a running client");
@@ -115,7 +117,7 @@ public class NetworkClient {
 
         synchronized(serverResponseBoolSync) {
             try {
-                serverResponseBoolSync.wait();
+                serverResponseBoolSync.wait(200);
             }
             catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -184,26 +186,21 @@ public class NetworkClient {
             String header = message.split("-", 2)[0];
             String data = message.split("-", 2)[1];
 
-            if(header.equals(NetworkMessage.DRAW_MESSAGE_HEADER)) {
-                drawInfoQueue.add(DrawInfo.fromJson(data));
-            }
+            switch(header) {
+                case NetworkMessage.DRAW_MESSAGE_HEADER:
+                    drawInfoQueue.add(DrawInfo.fromJson(data));
+                    break;
 
-            else if(header.equals(NetworkMessage.CANVAS_REQUEST_HEADER)) {
-                synchronized(serverResponseBoolSync) {
-                    serverResponseBool = Boolean.parseBoolean(data);
-                    serverResponseBoolSync.notify();
-                }
-            }
-
-            else if (header.equals(NetworkMessage.COLOR_REQUEST_HEADER)) {
-                synchronized(serverResponseBoolSync) {
-                    serverResponseBool = Boolean.parseBoolean(data);
-                    serverResponseBoolSync.notify();
-                }
-            }
-
-            else {
-                throw new IllegalArgumentException("Received invalid network message");
+                    // Both cases result in the same code
+                case NetworkMessage.CANVAS_REQUEST_HEADER:
+                case NetworkMessage.COLOR_REQUEST_HEADER:
+                    synchronized (serverResponseBoolSync) {
+                        serverResponseBool = Boolean.parseBoolean(data);
+                        serverResponseBoolSync.notify();
+                    }
+                    break;
+                default:
+                    throw new IllegalArgumentException("Received invalid network message");
             }
 
         }

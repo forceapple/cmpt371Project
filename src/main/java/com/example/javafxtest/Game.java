@@ -161,6 +161,7 @@ public class Game {
         // obtains PixelReader from the snap
         PixelReader pixelReader = image.getPixelReader();
 
+
         double snapHeight = image.getHeight();
         double snapWidth = image.getWidth();
         double coloredPixels = 0;

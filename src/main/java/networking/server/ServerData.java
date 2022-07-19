@@ -9,7 +9,12 @@ class ServerData {
 
 	// Clients are identified via the hash of the socket obtained through the socket.HashCode() method
 	private static ServerData instance = null;
-	public final LinkedBlockingQueue<ServerMessage> messageQueue;
+
+	/**
+	 * All accesses to variables belonging to this class MUST be encased in a synchronized block
+	 * to prevent multiple threads from accessing them at the same time
+	 */
+
 	public final List<Socket> clientSockets;
 	public final List<PrintWriter> clientOutputs;
 
@@ -31,7 +36,6 @@ class ServerData {
 	}
 	
 	private ServerData() {
-		messageQueue = new LinkedBlockingQueue<>();
 		clientOutputs = new ArrayList<>();
 		clientSockets = new ArrayList<>();
 		clientColors = new HashMap<>();
@@ -39,33 +43,24 @@ class ServerData {
 	}
 
 	public int clientCount() {
-		return clientOutputs.size();
+		synchronized(clientOutputs) {
+			return clientOutputs.size();
+		}
 	}
 
 	public void removeClient(Socket clientSocket, PrintWriter clientOutput) {
-		clientSockets.remove(clientSocket);
-		clientOutputs.remove(clientOutput);
-
-		clientColors.remove(clientSocket.hashCode());
-		canvasesInUse.remove(clientSocket.hashCode());
-	}
-}
-
-class ServerMessage {
-	public final String header;
-	public final String data;
-	public final int clientHashcode;
-	public ServerMessage(String header, String data, int hashCode) {
-		this.header = header;
-		this.data = data;
-		clientHashcode = hashCode;
+		synchronized(clientSockets) {
+			clientSockets.remove(clientSocket);
+		}
+		synchronized(clientOutputs) {
+			clientOutputs.remove(clientOutput);
+		}
+		synchronized(clientColors) {
+			clientColors.remove(clientSocket.hashCode());
+		}
+		synchronized(canvasesInUse) {
+			canvasesInUse.remove(clientSocket.hashCode());
+		}
 	}
 
-	/**
-	 * Generates the full message (header + data) that was sent to the server
-	 * @return The full message
-	 */
-	public String generateFullMessage() {
-		return header + "-" + data;
-	}
 }
