@@ -13,33 +13,18 @@ public class ServerOutputThread extends Thread{
 	
 	public void run() {
 		System.out.println("Server Output Thread Starting");
-		ServerMessage msg;
+		ServerMessage msg = new ServerMessage("", "", -1);
 		while(true) {
 			try {
 				msg = server.messageQueue.take();
+				processDrawMessage(msg);
 
-				DrawInfo info = DrawInfo.fromJson(msg.message);
+				System.out.println("Header: " + msg.header);
 
-				int colorHash = info.getColor().hashCode();
-				int canvasID = info.getCanvasID();
-
-				if(server.clientColors.get(msg.clientHashcode) != colorHash) {
-					// TODO: Implement sending errors to the client
-					throw new IllegalStateException("Attempting to draw with an unregistered colour!");
+				if(msg.header.equals(NetworkMessage.DRAW_MESSAGE_HEADER)) {
+					//processDrawMessage(msg);
 				}
 
-				if(server.canvasesInUse.get(msg.clientHashcode) != canvasID) {
-					throw new IllegalStateException("Attempting to draw on an canvas that isn't registered to the user");
-				}
-
-				for(int i = 0; i < server.clientCount(); i++) {
-
-					// Send the message to everyone except the one who sent it
-					if(msg.clientHashcode != server.clientSockets.get(i).hashCode()) {
-						server.clientOutputs.get(i).println(NetworkMessage.addDrawMessageHeader(msg.message));
-					}
-
-				}
 			}
 			catch(InterruptedException ex) {
 				ex.printStackTrace();
@@ -47,7 +32,22 @@ public class ServerOutputThread extends Thread{
 
 		}
 	}
-	
+
+	private void processDrawMessage(ServerMessage message) {
+		System.out.println("processDrawMessage: " + message.generateFullMessage());
+		for(int i = 0; i < server.clientCount(); i++) {
+
+			// Send the message to everyone except the one who sent it
+			if(message.clientHashcode != server.clientSockets.get(i).hashCode()) {
+				server.clientOutputs.get(i).println(message.generateFullMessage());
+			}
+
+		}
+	}
+
+	private void processCanvasRequestMessage(ServerMessage message) {
+
+	}
 	
 
 }

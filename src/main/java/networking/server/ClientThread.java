@@ -1,5 +1,6 @@
 package networking.server;
 
+import com.example.javafxtest.DrawInfo;
 import networking.NetworkMessage;
 
 import java.io.*;
@@ -44,17 +45,17 @@ public class ClientThread extends Thread {
 
 	private void processMessage(String msg) {
 
+		System.out.println(msg);
+
 		String header = msg.split("-", 2)[0];
-
-
 		String data = msg.split("-", 2)[1];
 
 		if(header.equals(NetworkMessage.DRAW_MESSAGE_HEADER)) {
-			processDrawMessage(data);
+			processDrawMessage(header, data);
 		}
 
 		else if(header.equals(NetworkMessage.CANVAS_REQUEST_HEADER)) {
-			processCanvasRequest(data);
+			processCanvasRequest(header, data);
 		}
 
 		else if(header.equals(NetworkMessage.CANVAS_RELEASE_HEADER)) {
@@ -62,7 +63,7 @@ public class ClientThread extends Thread {
 		}
 
 		else if (header.equals(NetworkMessage.COLOR_REQUEST_HEADER)) {
-			processColorRequest(data);
+			processColorRequest(header, data);
 		}
 
 		else {
@@ -71,16 +72,33 @@ public class ClientThread extends Thread {
 		}
 	}
 
-	private void processDrawMessage(String data) {
+	private void processDrawMessage(String header, String data) {
+
 		try {
-			server.messageQueue.put(new ServerMessage(data, socket.hashCode()));
+			server.messageQueue.put(new ServerMessage(header, data, socket.hashCode()));
 		}
 		catch(InterruptedException ex) {
 			ex.printStackTrace();
 		}
+
+		DrawInfo info = DrawInfo.fromJson(data);
+
+		int colorHash = info.getColor().hashCode();
+		int canvasID = info.getCanvasID();
+
+		if(server.clientColors.get(socket.hashCode()) != colorHash) {
+			// TODO: Implement sending errors to the client
+			throw new IllegalStateException("Attempting to draw with an unregistered colour!");
+		}
+
+		if(server.canvasesInUse.get(socket.hashCode()) != canvasID) {
+			throw new IllegalStateException("Attempting to draw on an canvas that isn't registered to the user");
+		}
+
+
 	}
 
-	private void processCanvasRequest(String data) {
+	private void processCanvasRequest(String header, String data) {
 		int canvasID = Integer.parseInt(data);
 		synchronized(server.canvasesInUse) {
 			if(server.canvasesInUse.containsValue(canvasID) && server.canvasesInUse.get(socket.hashCode()) != canvasID) {
@@ -97,7 +115,7 @@ public class ClientThread extends Thread {
 		server.canvasesInUse.remove(socket.hashCode());
 	}
 
-	private void processColorRequest(String data) {
+	private void processColorRequest(String header, String data) {
 		int colorHash = Integer.parseInt(data);
 		synchronized(server.clientColors) {
 			if(server.clientColors.containsValue(colorHash)) {

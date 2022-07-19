@@ -52,10 +52,20 @@ class ServerData {
 }
 
 class ServerMessage {
-	public final String message;
+	public final String header;
+	public final String data;
 	public final int clientHashcode;
-	public ServerMessage(String msg, int hashCode) {
-		message = msg;
+	public ServerMessage(String header, String data, int hashCode) {
+		this.header = header;
+		this.data = data;
 		clientHashcode = hashCode;
+	}
+
+	/**
+	 * Generates the full message (header + data) that was sent to the server
+	 * @return The full message
+	 */
+	public String generateFullMessage() {
+		return header + "-" + data;
 	}
 }

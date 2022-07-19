@@ -75,7 +75,7 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
         jsonWriter.value(drawInfo.getX());
         jsonWriter.name("y");
         jsonWriter.value(drawInfo.getY());
-        jsonWriter.name("canvasId");
+        jsonWriter.name("canvasID");
         jsonWriter.value(drawInfo.getCanvasID());
 
         Color color = drawInfo.getColor();
