@@ -3,9 +3,6 @@ package networking.server;
 import com.example.javafxtest.DrawInfo;
 import networking.NetworkMessage;
 
-import java.io.*;
-import java.net.Socket;
-
 public class ServerOutputThread extends Thread{
 	
 	private ServerData server;
@@ -24,7 +21,7 @@ public class ServerOutputThread extends Thread{
 				DrawInfo info = DrawInfo.fromJson(msg.message);
 
 				int colorHash = info.getColor().hashCode();
-				int canvasID = info.getCanvasId();
+				int canvasID = info.getCanvasID();
 
 				if(server.clientColors.get(msg.clientHashcode) != colorHash) {
 					// TODO: Implement sending errors to the client

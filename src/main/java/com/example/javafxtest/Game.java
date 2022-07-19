@@ -85,7 +85,7 @@ public class Game {
                 // Only try to draw if the queue has something to draw
                 if(networkClient.networkInputs.areInputsAvailable()) {
                     DrawInfo info = networkClient.networkInputs.getNextInput();
-                    PixelWriter pWriter = canvases[info.getCanvasId()].getGraphicsContext2D().getPixelWriter();
+                    PixelWriter pWriter = canvases[info.getCanvasID()].getGraphicsContext2D().getPixelWriter();
 
                     // Having the rounding math done on the main thread may cause unneeded lag
                     // It may be more efficient to do this rounding in another thread so the values are pre-rounded
@@ -114,7 +114,7 @@ public class Game {
                         graphicsContext.moveTo(event.getX(), event.getY());
                         graphicsContext.stroke();
 
-                        networkClient.sendDrawingMessage(DrawInfo.toJson(new DrawInfo(thisCanvasId, event.getX(), event.getY(), networkClient.clientColor)));
+                        networkClient.sendDrawing(event.getX(), event.getY());
                     }
                 });
 
@@ -134,7 +134,7 @@ public class Game {
                         graphicsContext.lineTo(event.getX(), event.getY());
                         graphicsContext.stroke();
 
-                        networkClient.sendDrawingMessage(DrawInfo.toJson(new DrawInfo(thisCanvasId, event.getX(), event.getY(), networkClient.clientColor)));
+                        networkClient.sendDrawing(event.getX(), event.getY());
                     }
                 });
 

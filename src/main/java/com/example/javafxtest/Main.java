@@ -38,6 +38,9 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+
+        // Temporary code to allow the client to set the server host at runtime
+        // This should be implemented in a nicer way later
         TextField textField = new TextField();
         Button btn = new Button("Set Server Host");
         btn.setTranslateX(15);

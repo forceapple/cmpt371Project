@@ -31,6 +31,8 @@ public class NetworkClient {
     private final Boolean serverResponseBoolSync;
     private boolean serverResponseBool;
 
+    private boolean clientRunning = false;
+
 
     public NetworkClient(String host) {
         observers = new ArrayList<>();
@@ -70,6 +72,7 @@ public class NetworkClient {
             throw new IllegalStateException("Attempting to start the client without registering a colour!");
         }
 
+        clientRunning = true;
     }
 
     /**
@@ -104,6 +107,10 @@ public class NetworkClient {
      */
     public boolean selectCanvasForDrawing(int canvasId) {
 
+        if(!clientRunning) {
+            throw new IllegalStateException("Attempting to select canvas without a running client");
+        }
+
         output.println(NetworkMessage.addCanvasRequestHeader(Integer.toString(canvasId)));
 
         synchronized(serverResponseBoolSync) {
@@ -126,12 +133,35 @@ public class NetworkClient {
      * Releases the canvas owned by the client. If no canvases are owned then does nothing
      */
     public void releaseCanvas() {
+        if(!clientRunning) {
+            throw new IllegalStateException("Attempting to release canvas without a running client");
+        }
+
         output.println(NetworkMessage.generateCanvasReleaseMessage());
         currentCanvasID = -1;
     }
 
-    public void sendDrawingMessage(String msg) {
-        output.println(NetworkMessage.addDrawMessageHeader(msg));
+    /**
+     * Sends a message to the server indicate that a certain pixel on the registered canvas is drawn
+     * The color of the pixel is the registered client color
+     * @param x The x coordinate of the pixel being drawn
+     * @param y The y coordinate of the pixel being drawn
+     */
+    public void sendDrawing(double x, double y) {
+
+        if(!clientRunning) {
+            throw new IllegalStateException("Attempting to draw without a running client");
+        }
+
+        if(clientColor == null) {
+            throw new IllegalStateException("Attempting to draw without registering a color");
+        }
+        if(currentCanvasID == -1) {
+            throw new IllegalStateException("Attempting to draw without registering a canvas");
+        }
+
+        DrawInfo draw = new DrawInfo(y, x, currentCanvasID, clientColor);
+        output.println(NetworkMessage.generateDrawMessage(draw));
     }
 
     public class InputHandler implements NetworkObserver {
