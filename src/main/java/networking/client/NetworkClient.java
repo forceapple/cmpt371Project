@@ -166,7 +166,7 @@ public class NetworkClient {
             throw new IllegalStateException("Attempting to draw without registering a canvas");
         }
 
-        DrawInfo draw = new DrawInfo(y, x, currentCanvasID, clientColor);
+        DrawInfo draw = new DrawInfo(x, y, currentCanvasID, clientColor);
         output.println(NetworkMessage.generateDrawMessage(draw));
     }
 

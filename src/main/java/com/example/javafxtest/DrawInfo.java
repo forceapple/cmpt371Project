@@ -20,7 +20,7 @@ public class DrawInfo {
     private final int canvasID;
     private final Color color;
 
-    public DrawInfo(double y, double x, int canvasID, Color color) {
+    public DrawInfo(double x, double y, int canvasID, Color color) {
         this.x = x;
         this.y = y;
         this.canvasID = canvasID;
@@ -138,7 +138,7 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
         jsonReader.endObject();
 
         color = new Color(colorRed, colorGreen, colorBlue, colorOpacity);
-        return new DrawInfo(y, x, canvasID, color);
+        return new DrawInfo(x, y, canvasID, color);
     }
 }
 
