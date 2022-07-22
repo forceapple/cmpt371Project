@@ -10,16 +10,20 @@ import javafx.scene.paint.Color;
 
 import java.io.IOException;
 
+/**
+ * An immutable class used to contain information about a user's drawing.
+ * Used for sending information over the network.
+ */
 public class DrawInfo {
     private final double x;
     private final double y;
-    private final int canvasId;
+    private final int canvasID;
     private final Color color;
 
-    public DrawInfo(int id, double x, double y, Color color) {
-        this.canvasId = id;
+    public DrawInfo(double x, double y, int canvasID, Color color) {
         this.x = x;
         this.y = y;
+        this.canvasID = canvasID;
         this.color = color;
     }
 
@@ -31,14 +35,16 @@ public class DrawInfo {
         return y;
     }
 
-    public int getCanvasId() {
-        return canvasId;
+    public int getCanvasID() {
+        return canvasID;
     }
 
     public Color getColor() {
         return color;
     }
-
+    public String toJson() {
+        return toJson(this);
+    }
     public static String toJson(DrawInfo drawInfo) {
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(DrawInfo.class, new DrawInfoAdapter());
@@ -55,6 +61,10 @@ public class DrawInfo {
 
 }
 
+/**
+ * A TypeAdapter for the DrawInfo class
+ * Used for Gson serialization
+ */
 class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
 
     @Override
@@ -65,8 +75,8 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
         jsonWriter.value(drawInfo.getX());
         jsonWriter.name("y");
         jsonWriter.value(drawInfo.getY());
-        jsonWriter.name("canvasId");
-        jsonWriter.value(drawInfo.getCanvasId());
+        jsonWriter.name("canvasID");
+        jsonWriter.value(drawInfo.getCanvasID());
 
         Color color = drawInfo.getColor();
         jsonWriter.name("color.Red");
@@ -85,7 +95,7 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
     public DrawInfo read(JsonReader jsonReader) throws IOException {
         double x = 0;
         double y = 0;
-        int canvasId = -1;
+        int canvasID = -1;
         Color color;
         double colorRed = 0;
         double colorGreen = 0;
@@ -108,8 +118,8 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
             if (propertyName.equals("y")) {
                 y = jsonReader.nextDouble();
             }
-            if (propertyName.equals("canvasId")) {
-                canvasId = jsonReader.nextInt();
+            if (propertyName.equals("canvasID")) {
+                canvasID = jsonReader.nextInt();
             }
             if (propertyName.equals("color.Red")) {
                 colorRed = jsonReader.nextDouble();
@@ -128,7 +138,7 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
         jsonReader.endObject();
 
         color = new Color(colorRed, colorGreen, colorBlue, colorOpacity);
-        return new DrawInfo(canvasId, x, y, color);
+        return new DrawInfo(x, y, canvasID, color);
     }
 }
 

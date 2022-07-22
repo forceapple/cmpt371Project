@@ -5,11 +5,20 @@ import java.net.Socket;
 import java.util.*;
 import java.util.concurrent.*;
 
+/**
+ * A singleton class that contains all the data that needs to be shared across the different server threads
+ * Accessing variables is not thread safe so manual synchronization is required.
+ */
 class ServerData {
-	
+
+	// Clients are identified via the hash of the socket obtained through the socket.HashCode() method
 	private static ServerData instance = null;
-	
-	public final LinkedBlockingQueue<ServerMessage> messageQueue;
+
+	/**
+	 * All accesses to variables belonging to this class MUST be encased in a synchronized block
+	 * to prevent multiple threads from accessing them at the same time
+	 */
+
 	public final List<Socket> clientSockets;
 	public final List<PrintWriter> clientOutputs;
 
@@ -31,7 +40,6 @@ class ServerData {
 	}
 	
 	private ServerData() {
-		messageQueue = new LinkedBlockingQueue<>();
 		clientOutputs = new ArrayList<>();
 		clientSockets = new ArrayList<>();
 		clientColors = new HashMap<>();
@@ -39,15 +47,24 @@ class ServerData {
 	}
 
 	public int clientCount() {
-		return clientOutputs.size();
+		synchronized(clientOutputs) {
+			return clientOutputs.size();
+		}
 	}
-}
 
-class ServerMessage {
-	public final String message;
-	public final int clientHashcode;
-	public ServerMessage(String msg, int hashCode) {
-		message = msg;
-		clientHashcode = hashCode;
+	public void removeClient(Socket clientSocket, PrintWriter clientOutput) {
+		synchronized(clientSockets) {
+			clientSockets.remove(clientSocket);
+		}
+		synchronized(clientOutputs) {
+			clientOutputs.remove(clientOutput);
+		}
+		synchronized(clientColors) {
+			clientColors.remove(clientSocket.hashCode());
+		}
+		synchronized(canvasesInUse) {
+			canvasesInUse.remove(clientSocket.hashCode());
+		}
 	}
+
 }
