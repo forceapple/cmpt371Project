@@ -11,6 +11,7 @@ import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -32,10 +33,13 @@ public class Game {
         int count = 0;
         for (int i= 0; i< 8 ; i++){
             for (int j= 0; j< 8 ; j++){
-                grid.add(canvases[count], i, j,1,1);
+                // Put the canvases inside a StackPane and give the StackPane a border
+                StackPane pane = new StackPane(canvases[count]);
+                pane.setStyle("-fx-border-color: black; -fx-border-width: 3;");
+
+                grid.add(pane, i, j,1,1);
                 final GraphicsContext graphicsContext = canvases[count].getGraphicsContext2D();
                 makeCanvasDrawable(graphicsContext, canvases[count]);
-                initDraw(graphicsContext);
                 count++;
             }
         }
@@ -48,31 +52,12 @@ public class Game {
 
         StackPane root = new StackPane();
         root.getChildren().add(grid);
-        Scene scene = new Scene(root, 900, 850);
+        Scene scene = new Scene(root, grid.getPrefWidth(), grid.getPrefHeight());
         primaryStage.setScene(scene);
         primaryStage.show();
 
     }
 
-    private void initDraw(GraphicsContext gc) {
-        double canvasWidth = gc.getCanvas().getWidth();
-        double canvasHeight = gc.getCanvas().getHeight();
-
-        gc.setFill(Color.LIGHTGRAY);
-        gc.setStroke(Color.BLACK);
-        gc.setLineWidth(5);
-
-        gc.fill();
-        gc.strokeRect(
-                0,              //x of the upper left corner
-                0,              //y of the upper left corner
-                canvasWidth,    //width of the rectangle
-                canvasHeight);  //height of the rectangle
-
-        gc.setFill(Color.RED);
-        gc.setStroke(networkClient.clientColor);
-        gc.setLineWidth(1);
-    }
 
     private void makeCanvasDrawable(GraphicsContext graphicsContext, Canvas canvas) {
         PixelWriter pWriter = graphicsContext.getPixelWriter();
