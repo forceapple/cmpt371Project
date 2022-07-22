@@ -36,6 +36,7 @@ public class NetworkClient {
     private boolean serverResponseBool;
 
     private boolean clientRunning = false;
+    private boolean firstDraw = false;
 
 
     public NetworkClient(String host) {
@@ -130,6 +131,7 @@ public class NetworkClient {
 
         if(serverResponseBool) {
             currentCanvasID = canvasId;
+            firstDraw = true;
         }
 
         return serverResponseBool;
@@ -166,8 +168,10 @@ public class NetworkClient {
             throw new IllegalStateException("Attempting to draw without registering a canvas");
         }
 
-        DrawInfo draw = new DrawInfo(x, y, currentCanvasID, clientColor);
+        DrawInfo draw = new DrawInfo(x, y, currentCanvasID, clientColor, firstDraw);
         output.println(NetworkMessage.generateDrawMessage(draw));
+
+        firstDraw = false;
     }
 
     /**

@@ -85,11 +85,19 @@ public class Game {
                 // Only try to draw if the queue has something to draw
                 if(networkClient.networkInputs.areInputsAvailable()) {
                     DrawInfo info = networkClient.networkInputs.getNextInput();
-                    PixelWriter pWriter = canvases[info.getCanvasID()].getGraphicsContext2D().getPixelWriter();
+                    GraphicsContext drawContext = canvases[info.getCanvasID()].getGraphicsContext2D();
 
-                    // Having the rounding math done on the main thread may cause unneeded lag
-                    // It may be more efficient to do this rounding in another thread so the values are pre-rounded
-                    pWriter.setColor((int)Math.round(info.getX()), (int)Math.round(info.getY()), info.getColor());
+                    if(info.isPathStart()) {
+                        drawContext.setStroke(info.getColor());
+                        drawContext.beginPath();
+                        drawContext.moveTo(info.getX(), info.getY());
+                        drawContext.stroke();
+                    }
+                    else {
+                        drawContext.lineTo(info.getX(), info.getY());
+                        drawContext.stroke();
+                    }
+
                 }
             }
         };
@@ -108,8 +116,7 @@ public class Game {
                             return;
                         }
 
-                        finalPWriter.setColor((int)Math.round(event.getX()), (int)Math.round(event.getY()), networkClient.clientColor);
-
+                        graphicsContext.setStroke(networkClient.clientColor);
                         graphicsContext.beginPath();
                         graphicsContext.moveTo(event.getX(), event.getY());
                         graphicsContext.stroke();
@@ -127,10 +134,6 @@ public class Game {
                             return;
                         }
 
-
-                        System.out.println("x: " + event.getX() + ", y: " + event.getY());
-                        System.out.println(canvas.getId());
-                        finalPWriter.setColor((int)Math.round(event.getX()), (int)Math.round(event.getY()), networkClient.clientColor);
                         graphicsContext.lineTo(event.getX(), event.getY());
                         graphicsContext.stroke();
 
