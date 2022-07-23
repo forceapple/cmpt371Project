@@ -10,9 +10,7 @@ import javafx.scene.image.PixelReader;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import networking.client.NetworkClient;
@@ -35,7 +33,7 @@ public class Game {
             for (int j= 0; j< 8 ; j++){
                 // Put the canvases inside a StackPane and give the StackPane a border
                 StackPane pane = new StackPane(canvases[count]);
-                pane.setStyle("-fx-border-color: black; -fx-border-width: 3;");
+                pane.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
 
                 grid.add(pane, i, j,1,1);
                 final GraphicsContext graphicsContext = canvases[count].getGraphicsContext2D();
@@ -73,6 +71,7 @@ public class Game {
                     GraphicsContext drawContext = canvases[info.getCanvasID()].getGraphicsContext2D();
 
                     if(info.isPathStart()) {
+                        ((StackPane)canvases[info.getCanvasID()].getParent()).setBorder(new Border(new BorderStroke(info.getColor(), BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
                         drawContext.setStroke(info.getColor());
                         drawContext.beginPath();
                         drawContext.moveTo(info.getX(), info.getY());
