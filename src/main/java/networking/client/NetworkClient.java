@@ -39,23 +39,26 @@ public class NetworkClient {
     private boolean firstDraw = false;
 
 
-    public NetworkClient(String host) {
+    public NetworkClient(String host, String port) throws IOException, IllegalArgumentException {
         observers = new ArrayList<>();
         networkInputs = new InputHandler();
         addObserver(networkInputs);
         serverResponseBoolSync = false;
         serverResponseBool = false;
         currentCanvasID = -1;
+        socket = new Socket(host, Integer.parseInt(port));
 
         try {
-            socket = new Socket(host, 7070);
+
             output = new PrintWriter(socket.getOutputStream(), true);
             input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
         }
-        catch (IOException e) {
+        catch(IOException e) {
             e.printStackTrace();
         }
+
+
+
 
         ClientNetworkThread networkThread = new ClientNetworkThread(input, observers);
         networkThread.setName("Client Network Thread");

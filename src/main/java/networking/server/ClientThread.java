@@ -134,7 +134,7 @@ public class ClientThread extends Thread {
 
 		synchronized(server.canvasesInUse) {
 			// Send true or false depending on if the canvas is already owned
-			if(server.canvasesInUse.containsValue(canvasID) && server.canvasesInUse.get(socket.hashCode()) != canvasID) {
+			if(server.canvasesInUse.containsValue(canvasID) ) {
 				synchronized(output) {
 					output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(false)));
 				}
