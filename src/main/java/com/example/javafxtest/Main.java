@@ -2,7 +2,9 @@ package com.example.javafxtest;
 
 import javafx.application.Application;
 import javafx.event.EventHandler;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
@@ -11,54 +13,30 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import networking.client.NetworkClient;
 
+import java.io.IOException;
 
 
 public class Main extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-//    private PixelWriter pWriter;
-
-    private NetworkClient client;
-    private NetworkClient setupClient(String host) {
-        client = new NetworkClient(host);
-
-
-        // Temporary setup for the client colours. This should have a better implementation later
-        Color possibleColors[] = {Color.BLUE, Color.RED, Color.GREEN, Color.BLACK};
-        for(Color c : possibleColors) {
-            if(client.registerColor(c)) {
-                break;
-            }
-        }
-
-        client.startClient();
-        return client;
-    }
-
     @Override
     public void start(Stage primaryStage) {
 
-        // Temporary code to allow the client to set the server host at runtime
-        // This should be implemented in a nicer way later
-        TextField textField = new TextField();
-        Button btn = new Button("Set Server Host");
-        btn.setTranslateX(15);
-        btn.setTranslateY(125);
-        Group root = new Group(textField, btn);
-        Scene scene = new Scene(root);
-        Stage newWindow = new Stage();
-        newWindow.setScene(scene);
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(LaunchScreenController.class.getResource("LaunchScreen.fxml"));
+            Parent root = loader.load();
+            Scene scene = new Scene(root);
+            primaryStage.setScene(scene);
+            primaryStage.show();
+            root.requestFocus(); // Javafx is annoying and automatically focuses on one of the text fields otherwise
+        }
+        catch(IOException e) {
+            throw new RuntimeException(e);
+        }
 
-        btn.setOnMouseClicked(mouseEvent -> {
 
-            NetworkClient client = setupClient(textField.getText());
-            Game newGame = new Game(primaryStage, client);
-
-            newWindow.close();
-        });
-
-        newWindow.show();
     }
 
 
