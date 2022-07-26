@@ -88,6 +88,13 @@ public class ClientThread extends Thread {
 			case NetworkMessage.COLOR_REQUEST_HEADER:
 				processColorRequest(data);
 				break;
+			case NetworkMessage.CANVAS_LOCK:
+				System.out.println("ClientThread");
+				processLockMessage(data);
+				break;
+			case NetworkMessage.CANVAS_CLEAR:
+				processCanvasClearMessage(data);
+				break;
 			default:
 				// TODO: Don't throw exception on server, instead sent some error to client
 				throw new IllegalArgumentException("Invalid Message being sent over network");
@@ -167,6 +174,22 @@ public class ClientThread extends Thread {
 				synchronized(output) {
 					output.println(NetworkMessage.addColorRequestHeader(Boolean.toString(true)));
 				}
+			}
+		}
+	}
+
+	private void processLockMessage(String data) {
+		synchronized (server.islockedMutex){
+			for(PrintWriter out : server.clientOutputs) {
+				out.println(NetworkMessage.addCanvasLockRequestHeader(data));
+			}
+		}
+	}
+
+	private void processCanvasClearMessage(String data) {
+		synchronized (server.clientOutputs) {
+			for (PrintWriter out : server.clientOutputs) {
+				out.println(NetworkMessage.addCanvasClearRequestHeader(data));
 			}
 		}
 	}

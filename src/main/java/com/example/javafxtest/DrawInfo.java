@@ -21,12 +21,15 @@ public class DrawInfo {
     private final Color color;
     private final boolean pathStart;
 
-    public DrawInfo(double x, double y, int canvasID, Color color, boolean pathStart) {
+    private final boolean clearCanvas;
+
+    public DrawInfo(double x, double y, int canvasID, Color color, boolean pathStart, boolean clearCanvas) {
         this.x = x;
         this.y = y;
         this.canvasID = canvasID;
         this.color = color;
         this.pathStart = pathStart;
+        this.clearCanvas = clearCanvas;
     }
 
     public double getX() {
@@ -46,6 +49,9 @@ public class DrawInfo {
     }
     public boolean isPathStart() {
         return pathStart;
+    }
+    public boolean isClearCanvas() {
+        return clearCanvas;
     }
     public String toJson() {
         return toJson(this);
@@ -96,6 +102,9 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
         jsonWriter.name("pathStart");
         jsonWriter.value(drawInfo.isPathStart());
 
+        jsonWriter.name("clearCanvas");
+        jsonWriter.value(drawInfo.isPathStart());
+
         jsonWriter.endObject();
     }
 
@@ -110,6 +119,7 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
         double colorBlue = 0;
         double colorOpacity = 0;
         boolean pathStart = false;
+        boolean clearCanvas = false;
 
         jsonReader.beginObject();
 
@@ -145,12 +155,15 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
             if (propertyName.equals("pathStart")) {
                 pathStart = jsonReader.nextBoolean();
             }
+            if (propertyName.equals("clearCanvas")) {
+                pathStart = jsonReader.nextBoolean();
+            }
         }
 
         jsonReader.endObject();
 
         color = new Color(colorRed, colorGreen, colorBlue, colorOpacity);
-        return new DrawInfo(x, y, canvasID, color, pathStart);
+        return new DrawInfo(x, y, canvasID, color, pathStart, clearCanvas);
     }
 }
 

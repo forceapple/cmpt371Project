@@ -7,7 +7,6 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.PixelReader;
-import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
@@ -17,9 +16,12 @@ import networking.client.NetworkClient;
 
 public class Game {
     Canvas[] canvases;
+
+
     private NetworkClient networkClient;
     Game(Stage primaryStage, NetworkClient client) {
         canvases = new Canvas[64];
+
         this.networkClient = client;
         GridPane grid = new GridPane();
 
@@ -58,10 +60,75 @@ public class Game {
 
 
     private void makeCanvasDrawable(GraphicsContext graphicsContext, Canvas canvas) {
-        PixelWriter pWriter = graphicsContext.getPixelWriter();
-        PixelWriter finalPWriter = pWriter;
         int thisCanvasId = Integer.parseInt(canvas.getId());
-        // This should be in another function
+        AnimationTimer animationTimer = getAnimationTimer(canvas);
+
+        animationTimer.start();
+
+        canvas.addEventHandler(MouseEvent.MOUSE_PRESSED,
+                new EventHandler<MouseEvent>(){
+
+                    @Override
+                    public void handle(MouseEvent event) {
+
+                        // If the canvas isn't drawable then something should indicate this to the player
+                        if(!networkClient.selectCanvasForDrawing(thisCanvasId)) {
+                            return;
+                        }
+                        if(!networkClient.getIsLockedByID(thisCanvasId)){
+                            graphicsContext.setStroke(networkClient.clientColor);
+                            graphicsContext.beginPath();
+                            graphicsContext.moveTo(event.getX(), event.getY());
+                            graphicsContext.stroke();
+
+                            networkClient.sendDrawing(event.getX(), event.getY());
+                        }
+                    }
+                });
+
+        canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED,
+                new EventHandler<MouseEvent>(){
+                    @Override
+                    public void handle(MouseEvent event) {
+
+                        if(networkClient.currentCanvasID != thisCanvasId) {
+                            return;
+                        }
+                        if(!networkClient.getIsLockedByID(thisCanvasId)) {
+                            graphicsContext.lineTo(event.getX(), event.getY());
+                            graphicsContext.stroke();
+
+                            networkClient.sendDrawing(event.getX(), event.getY());
+                        }
+                    }
+                });
+
+        canvas.addEventHandler(MouseEvent.MOUSE_RELEASED,
+                new EventHandler<MouseEvent>(){
+                    @Override
+                    public void handle(MouseEvent event) {
+                        double fillPercentage = computeFillPercentage(graphicsContext);
+                        if(!networkClient.getIsLockedByID(thisCanvasId)) {
+                            if(fillPercentage > 50) {
+                                networkClient.sendLockCanvas(thisCanvasId);
+                            }
+                            else {
+                                // CLEAR CANVAS
+                                graphicsContext.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+                                networkClient.sendClearCanvasbyID(thisCanvasId);
+                            }
+                        }
+
+
+
+
+                        System.out.println("filled %: " + fillPercentage);
+                        networkClient.releaseCanvas();
+                    }
+                });
+    }
+
+    private AnimationTimer getAnimationTimer(Canvas canvas) {
         AnimationTimer animationTimer = new AnimationTimer() {
             @Override
             public void handle(long l) {
@@ -69,8 +136,13 @@ public class Game {
                 if(networkClient.networkInputs.areInputsAvailable()) {
                     DrawInfo info = networkClient.networkInputs.getNextInput();
                     GraphicsContext drawContext = canvases[info.getCanvasID()].getGraphicsContext2D();
+                    if(info.isClearCanvas()){
+                        drawContext.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+                        ((StackPane)canvases[info.getCanvasID()].getParent()).setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
+                        drawContext.setStroke(info.getColor());
 
-                    if(info.isPathStart()) {
+                    }
+                    else if(info.isPathStart()) {
                         ((StackPane)canvases[info.getCanvasID()].getParent()).setBorder(new Border(new BorderStroke(info.getColor(), BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
                         drawContext.setStroke(info.getColor());
                         drawContext.beginPath();
@@ -85,59 +157,8 @@ public class Game {
                 }
             }
         };
-
-        animationTimer.start();
-
-        pWriter = graphicsContext.getPixelWriter();
-        canvas.addEventHandler(MouseEvent.MOUSE_PRESSED,
-                new EventHandler<MouseEvent>(){
-
-                    @Override
-                    public void handle(MouseEvent event) {
-
-                        // If the canvas isn't drawable then something should indicate this to the player
-                        if(!networkClient.selectCanvasForDrawing(thisCanvasId)) {
-                            return;
-                        }
-
-                        graphicsContext.setStroke(networkClient.clientColor);
-                        graphicsContext.beginPath();
-                        graphicsContext.moveTo(event.getX(), event.getY());
-                        graphicsContext.stroke();
-
-                        networkClient.sendDrawing(event.getX(), event.getY());
-                    }
-                });
-
-        canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED,
-                new EventHandler<MouseEvent>(){
-                    @Override
-                    public void handle(MouseEvent event) {
-
-                        if(networkClient.currentCanvasID != thisCanvasId) {
-                            return;
-                        }
-
-                        graphicsContext.lineTo(event.getX(), event.getY());
-                        graphicsContext.stroke();
-
-                        networkClient.sendDrawing(event.getX(), event.getY());
-                    }
-                });
-
-        canvas.addEventHandler(MouseEvent.MOUSE_RELEASED,
-                new EventHandler<MouseEvent>(){
-                    @Override
-                    public void handle(MouseEvent event) {
-                        double fillPercentage = computeFillPercentage(graphicsContext);
-                        System.out.println("filled %: " + fillPercentage);
-                        networkClient.releaseCanvas();
-
-
-                    }
-                });
+        return animationTimer;
     }
-
 
 
     private double computeFillPercentage(GraphicsContext graphicsContext) {

@@ -42,6 +42,8 @@ public class NetworkMessage {
     public static final String COLOR_REQUEST_HEADER = "COLOR_REQUEST";
     public static final String CANVAS_REQUEST_HEADER = "CANVAS_REQUEST";
     public static final String CANVAS_RELEASE_HEADER = "CANVAS_RELEASE";
+    public static final String CANVAS_LOCK = "CANVAS_LOCK";
+    public static final String CANVAS_CLEAR = "CANVAS_CLEAR";
 
     public static String addDrawMessageHeader(String msg) {
         return DRAW_MESSAGE_HEADER + "-" + msg;
@@ -54,6 +56,11 @@ public class NetworkMessage {
     public static String addCanvasRequestHeader(String msg) {
         return CANVAS_REQUEST_HEADER + "-" + msg;
     }
+
+    public static String addCanvasLockRequestHeader(String msg) {
+        return CANVAS_LOCK + "-" + msg;
+    }
+    public static String addCanvasClearRequestHeader(String msg) {return CANVAS_CLEAR + "-" + msg; }
 
     /**
      * Generates a message indicating to the server to release the currently owned canvas

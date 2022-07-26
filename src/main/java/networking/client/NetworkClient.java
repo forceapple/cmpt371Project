@@ -8,7 +8,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.*;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -37,6 +37,7 @@ public class NetworkClient {
 
     private boolean clientRunning = false;
     private boolean firstDraw = false;
+    boolean[] isLocked;
 
 
     public NetworkClient(String host, String port) throws IOException, IllegalArgumentException {
@@ -47,6 +48,11 @@ public class NetworkClient {
         serverResponseBool = false;
         currentCanvasID = -1;
         socket = new Socket(host, Integer.parseInt(port));
+        isLocked = new boolean[64];
+
+        for(int i=0; i<64; i++){
+            isLocked[i] = false;
+        }
 
         try {
 
@@ -171,10 +177,42 @@ public class NetworkClient {
             throw new IllegalStateException("Attempting to draw without registering a canvas");
         }
 
-        DrawInfo draw = new DrawInfo(x, y, currentCanvasID, clientColor, firstDraw);
+        DrawInfo draw = new DrawInfo(x, y, currentCanvasID, clientColor, firstDraw, false);
         output.println(NetworkMessage.generateDrawMessage(draw));
 
         firstDraw = false;
+    }
+
+    public void sendLockCanvas(int CanvasID) {
+
+        if(!clientRunning) {
+            throw new IllegalStateException("Attempting to lock canvas without a running client");
+        }
+
+        if(clientColor == null) {
+            throw new IllegalStateException("Attempting to lock canvas without registering a color");
+        }
+        if(currentCanvasID == -1) {
+            throw new IllegalStateException("Attempting to lock canvas without registering a canvas");
+        }
+        String stringCanvasID = Integer.toString(CanvasID);
+        output.println(NetworkMessage.addCanvasLockRequestHeader(stringCanvasID));
+    }
+
+    public void sendClearCanvasbyID(int CanvasID) {
+
+        if(!clientRunning) {
+            throw new IllegalStateException("Attempting to clear canvas without a running client");
+        }
+
+        if(clientColor == null) {
+            throw new IllegalStateException("Attempting to clear canvas without registering a color");
+        }
+        if(currentCanvasID == -1) {
+            throw new IllegalStateException("Attempting to clear canvas without registering a canvas");
+        }
+        String stringCanvasID = Integer.toString(CanvasID);
+        output.println(NetworkMessage.addCanvasClearRequestHeader(stringCanvasID));
     }
 
     /**
@@ -220,11 +258,25 @@ public class NetworkClient {
                         serverResponseBoolSync.notify();
                     }
                     break;
+                case NetworkMessage.CANVAS_LOCK:
+                    int canvasID = Integer.parseInt(data);
+                    isLocked[canvasID] = true;
+
+                    break;
+                case NetworkMessage.CANVAS_CLEAR:
+                    DrawInfo clear = new DrawInfo(0, 0, Integer.parseInt(data), Color.WHITE, false, true);
+                    drawInfoQueue.add(clear);
+
+                    break;
                 default:
                     throw new IllegalArgumentException("Received invalid network message");
             }
 
         }
+    }
+
+    public boolean getIsLockedByID(int canvasID){
+        return isLocked[canvasID];
     }
 
 }
