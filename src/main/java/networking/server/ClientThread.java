@@ -98,6 +98,9 @@ public class ClientThread extends Thread {
 			case NetworkMessage.CANVAS_OWN:
 				processCanvasOwnMessage(data);
 				break;
+			case NetworkMessage.CANVAS_LOCK_CHECK:
+				processLockCanvasCheckRequest(data);
+				break;
 			default:
 				// TODO: Don't throw exception on server, instead sent some error to client
 				throw new IllegalArgumentException("Invalid Message being sent over network");
@@ -164,6 +167,7 @@ public class ClientThread extends Thread {
 		}
 	}
 
+
 	private void processColorRequest(String data) {
 		int colorHash = Integer.parseInt(data);
 		synchronized(server.clientColors) {
@@ -182,9 +186,24 @@ public class ClientThread extends Thread {
 	}
 
 	private void processLockMessage(String data) {
-		synchronized (server.clientOutputs){
-			for(PrintWriter out : server.clientOutputs) {
-				out.println(NetworkMessage.addCanvasLockRequestHeader(data));
+		int canvasID = Integer.parseInt(data);
+		server.lockCanvasByID(canvasID);
+	}
+
+	private void processLockCanvasCheckRequest(String data) {
+		int canvasID = Integer.parseInt(data);
+
+		synchronized(server.isLocked) {
+			// Send true or false depending on if the canvas is already locked
+			if(!server.isLocked[canvasID]) {
+				synchronized(output) {
+					output.println(NetworkMessage.addCanvasIsLockedRequestHeader(Boolean.toString(false)));
+				}
+			}
+			else {
+				synchronized(output) {
+					output.println(NetworkMessage.addCanvasIsLockedRequestHeader(Boolean.toString(true)));
+				}
 			}
 		}
 	}

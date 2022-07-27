@@ -32,6 +32,7 @@ class ServerData {
 	// and the hashcode of the socket of the user.
 	// format is socket hashcode, canvasID
 	public final Map<Integer, Integer> canvasesInUse;
+	public Boolean[] isLocked;
 
 	public static ServerData getInstance() {
 		if(instance == null) {
@@ -46,6 +47,11 @@ class ServerData {
 		clientSockets = new ArrayList<>();
 		clientColors = new HashMap<>();
 		canvasesInUse = new HashMap<>();
+		isLocked = new Boolean[64];
+
+		for(int i=0; i<64; i++){
+			isLocked[i] = false;
+		}
 
 	}
 
@@ -70,4 +76,8 @@ class ServerData {
 		}
 	}
 
+	public void lockCanvasByID(int canvasID) {
+		this.isLocked[canvasID] = true;
+		System.out.println(isLocked[canvasID]);
+	}
 }

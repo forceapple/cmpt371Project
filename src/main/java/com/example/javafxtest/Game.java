@@ -16,11 +16,12 @@ import networking.client.NetworkClient;
 
 public class Game {
     Canvas[] canvases;
-
+    private boolean isLocked[];
 
     private NetworkClient networkClient;
     Game(Stage primaryStage, NetworkClient client) {
         canvases = new Canvas[64];
+        isLocked = new boolean[64];
 
         this.networkClient = client;
         GridPane grid = new GridPane();
@@ -28,6 +29,7 @@ public class Game {
         for(int j=0; j<64; j++){
             Canvas canvas = new Canvas(100, 100);
             canvases[j] = canvas;
+            isLocked[j] = false;
             canvas.setId(Integer.toString(j));
         }
         int count = 0;
@@ -67,7 +69,6 @@ public class Game {
 
         canvas.addEventHandler(MouseEvent.MOUSE_PRESSED,
                 new EventHandler<MouseEvent>(){
-
                     @Override
                     public void handle(MouseEvent event) {
 
@@ -75,14 +76,20 @@ public class Game {
                         if(!networkClient.selectCanvasForDrawing(thisCanvasId)) {
                             return;
                         }
-                        if(!networkClient.getIsLockedByID(thisCanvasId)){
-                            graphicsContext.setStroke(networkClient.clientColor);
-                            graphicsContext.beginPath();
-                            graphicsContext.moveTo(event.getX(), event.getY());
-                            graphicsContext.stroke();
-
-                            networkClient.sendDrawing(event.getX(), event.getY());
+                        //sets local isLock to server's so mouse drag event doesn't need to call server continuously
+                        if(networkClient.checkIfCanvasIsLocked(thisCanvasId)){
+                            isLocked[thisCanvasId] = true;
+                            return;
                         }
+
+
+                        graphicsContext.setStroke(networkClient.clientColor);
+                        graphicsContext.beginPath();
+                        graphicsContext.moveTo(event.getX(), event.getY());
+                        graphicsContext.stroke();
+
+                        networkClient.sendDrawing(event.getX(), event.getY());
+
                     }
                 });
 
@@ -91,15 +98,14 @@ public class Game {
                     @Override
                     public void handle(MouseEvent event) {
 
-                        if(networkClient.currentCanvasID != thisCanvasId) {
+                        if(networkClient.currentCanvasID != thisCanvasId || isLocked[thisCanvasId]) {
                             return;
                         }
-                        if(!networkClient.getIsLockedByID(thisCanvasId)) {
-                            graphicsContext.lineTo(event.getX(), event.getY());
-                            graphicsContext.stroke();
+                        graphicsContext.lineTo(event.getX(), event.getY());
+                        graphicsContext.stroke();
 
-                            networkClient.sendDrawing(event.getX(), event.getY());
-                        }
+                        networkClient.sendDrawing(event.getX(), event.getY());
+
                     }
                 });
 
@@ -108,22 +114,23 @@ public class Game {
                     @Override
                     public void handle(MouseEvent event) {
                         double fillPercentage = computeFillPercentage(graphicsContext);
-                        if(!networkClient.getIsLockedByID(thisCanvasId)) {
-                            if(fillPercentage > 50) {
-                                networkClient.sendLockCanvasRequest(thisCanvasId);
-                                graphicsContext.setFill(networkClient.clientColor);
-                                graphicsContext.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
-                                networkClient.sendOwnCanvasbyID(thisCanvasId, networkClient.clientColor);
-                            }
-                            else {
-                                // CLEAR CANVAS
-                                graphicsContext.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-                                networkClient.sendClearCanvasByID(thisCanvasId);
-                            }
+
+                        //prevent mouse release to clear the canvas.
+                        if(networkClient.checkIfCanvasIsLocked(thisCanvasId)) {
+                            return;
                         }
-
-
-
+                        else if(fillPercentage > 50) {
+                            networkClient.sendLockCanvasRequest();
+                            isLocked[thisCanvasId] = true;
+                            graphicsContext.setFill(networkClient.clientColor);
+                            graphicsContext.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+                            networkClient.sendOwnCanvas();
+                        }
+                        else {
+                            // CLEAR CANVAS
+                            graphicsContext.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+                            networkClient.sendClearCanvas();
+                        }
 
                         System.out.println("filled %: " + fillPercentage);
                         networkClient.releaseCanvas();
@@ -139,19 +146,15 @@ public class Game {
                 if(networkClient.networkInputs.areInputsAvailable()) {
                     DrawInfo info = networkClient.networkInputs.getNextInput();
                     GraphicsContext drawContext = canvases[info.getCanvasID()].getGraphicsContext2D();
+
                     if(info.isClearCanvas()){
                         drawContext.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
                         ((StackPane)canvases[info.getCanvasID()].getParent()).setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
-                        drawContext.setStroke(info.getColor());
-
                     }
-
-                    if(info.isOwnCanvas()){
+                    else if(info.isOwnCanvas()){
                         drawContext.setFill(info.getColor());
                         drawContext.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
                         ((StackPane)canvases[info.getCanvasID()].getParent()).setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
-                        drawContext.setStroke(info.getColor());
-
                     }
                     else if(info.isPathStart()) {
                         ((StackPane)canvases[info.getCanvasID()].getParent()).setBorder(new Border(new BorderStroke(info.getColor(), BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
