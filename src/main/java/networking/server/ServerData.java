@@ -32,9 +32,6 @@ class ServerData {
 	// and the hashcode of the socket of the user.
 	// format is socket hashcode, canvasID
 	public final Map<Integer, Integer> canvasesInUse;
-	
-	//locked canvases that have been owned
-	public Boolean islockedMutex;
 
 	public static ServerData getInstance() {
 		if(instance == null) {
@@ -49,7 +46,6 @@ class ServerData {
 		clientSockets = new ArrayList<>();
 		clientColors = new HashMap<>();
 		canvasesInUse = new HashMap<>();
-		islockedMutex = false;
 
 	}
 

@@ -177,13 +177,13 @@ public class NetworkClient {
             throw new IllegalStateException("Attempting to draw without registering a canvas");
         }
 
-        DrawInfo draw = new DrawInfo(x, y, currentCanvasID, clientColor, firstDraw, false, false);
+        DrawInfo draw = new DrawInfo(x, y, currentCanvasID, clientColor, firstDraw, false, flase);
         output.println(NetworkMessage.generateDrawMessage(draw));
 
         firstDraw = false;
     }
 
-    public void sendLockCanvas(int CanvasID) {
+    public void sendLockCanvasRequest(int canvasID) {
 
         if(!clientRunning) {
             throw new IllegalStateException("Attempting to lock canvas without a running client");
@@ -195,11 +195,11 @@ public class NetworkClient {
         if(currentCanvasID == -1) {
             throw new IllegalStateException("Attempting to lock canvas without registering a canvas");
         }
-        String stringCanvasID = Integer.toString(CanvasID);
+        String stringCanvasID = Integer.toString(canvasID);
         output.println(NetworkMessage.addCanvasLockRequestHeader(stringCanvasID));
     }
 
-    public void sendClearCanvasbyID(int CanvasID) {
+    public void sendClearCanvasByID(int canvasID) {
 
         if(!clientRunning) {
             throw new IllegalStateException("Attempting to clear canvas without a running client");
@@ -211,24 +211,8 @@ public class NetworkClient {
         if(currentCanvasID == -1) {
             throw new IllegalStateException("Attempting to clear canvas without registering a canvas");
         }
-        String stringCanvasID = Integer.toString(CanvasID);
+        String stringCanvasID = Integer.toString(canvasID);
         output.println(NetworkMessage.addCanvasClearRequestHeader(stringCanvasID));
-    }
-
-    public void sendOwnCanvasbyID(int CanvasID, Color ownedColor) {
-
-        if(!clientRunning) {
-            throw new IllegalStateException("Attempting to own canvas without a running client");
-        }
-
-        if(clientColor == null) {
-            throw new IllegalStateException("Attempting to own canvas without registering a color");
-        }
-        if(currentCanvasID == -1) {
-            throw new IllegalStateException("Attempting to own canvas without registering a canvas");
-        }
-        String stringCanvasID = Integer.toString(CanvasID);
-        output.println(NetworkMessage.addCanvasOwnRequestHeader(stringCanvasID, ownedColor));
     }
 
     /**

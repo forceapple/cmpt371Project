@@ -109,7 +109,7 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
         jsonWriter.value(drawInfo.isPathStart());
 
         jsonWriter.name("clearCanvas");
-        jsonWriter.value(drawInfo.isPathStart());
+        jsonWriter.value(drawInfo.isClearCanvas());
 
         jsonWriter.name("ownCanvas");
         jsonWriter.value(drawInfo.isPathStart());
@@ -166,7 +166,7 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
                 pathStart = jsonReader.nextBoolean();
             }
             if (propertyName.equals("clearCanvas")) {
-                pathStart = jsonReader.nextBoolean();
+                clearCanvas = jsonReader.nextBoolean();
             }
             if (propertyName.equals("ownCanvas")) {
                 pathStart = jsonReader.nextBoolean();

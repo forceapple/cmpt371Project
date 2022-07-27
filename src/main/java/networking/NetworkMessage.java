@@ -38,6 +38,24 @@ public class NetworkMessage {
      *      Canvas Release Messages:
      *          Use the CANVAS_RELEASE_HEADER and an empty data section
      *          The server does not send a response back for these messages
+     *
+     *
+     *      Canvas Lock message:
+     *          Sending Request to Server:
+     *              Uses CANVAS_LOCK + .toString of an int indicating which canvas id to lock and sends it to the server
+     *
+     *         Server Responses:
+     *               Uses CANVAS_LOCK + .toString of an int indicating which canvas id to lock. Currently, it
+     *               only relays the message to all other clients
+     *
+ *          Canvas Clear message:
+     *           Sending Request to Server:
+     *                 Uses CANVAS_CLEAR + .toString of an int indicating which canvas id to clear and
+     *                 sends it to the server
+     *
+     *            Server Responses:
+     *                 Uses CANVAS_CLEAR + .toString of an int indicating which canvas id to clear. Currently, it
+     *                 relays which canvas to clear to all clients.
      */
     public static final String DRAW_MESSAGE_HEADER = "DRAW";
     public static final String COLOR_REQUEST_HEADER = "COLOR_REQUEST";

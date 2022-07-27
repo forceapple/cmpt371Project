@@ -90,7 +90,6 @@ public class ClientThread extends Thread {
 				processColorRequest(data);
 				break;
 			case NetworkMessage.CANVAS_LOCK:
-				System.out.println("ClientThread");
 				processLockMessage(data);
 				break;
 			case NetworkMessage.CANVAS_CLEAR:
@@ -183,7 +182,7 @@ public class ClientThread extends Thread {
 	}
 
 	private void processLockMessage(String data) {
-		synchronized (server.islockedMutex){
+		synchronized (server.clientOutputs){
 			for(PrintWriter out : server.clientOutputs) {
 				out.println(NetworkMessage.addCanvasLockRequestHeader(data));
 			}
