@@ -1,6 +1,7 @@
 package networking.server;
 
 import com.example.javafxtest.DrawInfo;
+import javafx.scene.paint.Color;
 import networking.NetworkMessage;
 
 import java.io.*;
@@ -94,6 +95,9 @@ public class ClientThread extends Thread {
 				break;
 			case NetworkMessage.CANVAS_CLEAR:
 				processCanvasClearMessage(data);
+				break;
+			case NetworkMessage.CANVAS_OWN:
+				processCanvasOwnMessage(data);
 				break;
 			default:
 				// TODO: Don't throw exception on server, instead sent some error to client
@@ -190,6 +194,17 @@ public class ClientThread extends Thread {
 		synchronized (server.clientOutputs) {
 			for (PrintWriter out : server.clientOutputs) {
 				out.println(NetworkMessage.addCanvasClearRequestHeader(data));
+			}
+		}
+	}
+
+	private void processCanvasOwnMessage(String data) {
+		synchronized (server.clientOutputs) {
+			String id = data.split("/", 2)[0];
+			String stringColor = data.split("/", 2)[1];
+			Color color = Color.valueOf(stringColor);
+			for (PrintWriter out : server.clientOutputs) {
+				out.println(NetworkMessage.addCanvasOwnRequestHeader(id, color));
 			}
 		}
 	}

@@ -111,6 +111,9 @@ public class Game {
                         if(!networkClient.getIsLockedByID(thisCanvasId)) {
                             if(fillPercentage > 50) {
                                 networkClient.sendLockCanvas(thisCanvasId);
+                                graphicsContext.setFill(networkClient.clientColor);
+                                graphicsContext.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+                                networkClient.sendOwnCanvasbyID(thisCanvasId, networkClient.clientColor);
                             }
                             else {
                                 // CLEAR CANVAS
@@ -138,6 +141,14 @@ public class Game {
                     GraphicsContext drawContext = canvases[info.getCanvasID()].getGraphicsContext2D();
                     if(info.isClearCanvas()){
                         drawContext.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+                        ((StackPane)canvases[info.getCanvasID()].getParent()).setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
+                        drawContext.setStroke(info.getColor());
+
+                    }
+
+                    if(info.isOwnCanvas()){
+                        drawContext.setFill(info.getColor());
+                        drawContext.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
                         ((StackPane)canvases[info.getCanvasID()].getParent()).setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
                         drawContext.setStroke(info.getColor());
 

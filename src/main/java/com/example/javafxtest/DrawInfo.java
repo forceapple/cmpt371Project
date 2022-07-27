@@ -23,13 +23,16 @@ public class DrawInfo {
 
     private final boolean clearCanvas;
 
-    public DrawInfo(double x, double y, int canvasID, Color color, boolean pathStart, boolean clearCanvas) {
+    private final boolean ownCanvas;
+
+    public DrawInfo(double x, double y, int canvasID, Color color, boolean pathStart, boolean clearCanvas, boolean ownCanvas) {
         this.x = x;
         this.y = y;
         this.canvasID = canvasID;
         this.color = color;
         this.pathStart = pathStart;
         this.clearCanvas = clearCanvas;
+        this.ownCanvas = ownCanvas;
     }
 
     public double getX() {
@@ -52,6 +55,9 @@ public class DrawInfo {
     }
     public boolean isClearCanvas() {
         return clearCanvas;
+    }
+    public boolean isOwnCanvas() {
+        return ownCanvas;
     }
     public String toJson() {
         return toJson(this);
@@ -105,6 +111,9 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
         jsonWriter.name("clearCanvas");
         jsonWriter.value(drawInfo.isPathStart());
 
+        jsonWriter.name("ownCanvas");
+        jsonWriter.value(drawInfo.isPathStart());
+
         jsonWriter.endObject();
     }
 
@@ -120,6 +129,7 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
         double colorOpacity = 0;
         boolean pathStart = false;
         boolean clearCanvas = false;
+        boolean ownCanvas = false;
 
         jsonReader.beginObject();
 
@@ -158,12 +168,15 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
             if (propertyName.equals("clearCanvas")) {
                 pathStart = jsonReader.nextBoolean();
             }
+            if (propertyName.equals("ownCanvas")) {
+                pathStart = jsonReader.nextBoolean();
+            }
         }
 
         jsonReader.endObject();
 
         color = new Color(colorRed, colorGreen, colorBlue, colorOpacity);
-        return new DrawInfo(x, y, canvasID, color, pathStart, clearCanvas);
+        return new DrawInfo(x, y, canvasID, color, pathStart, clearCanvas, ownCanvas);
     }
 }
 
