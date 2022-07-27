@@ -1,5 +1,6 @@
 package com.example.javafxtest;
 
+import javafx.geometry.Pos;
 import javafx.animation.AnimationTimer;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -13,11 +14,14 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import networking.client.NetworkClient;
+import javafx.scene.control.Label;
+import javafx.scene.text.Font;
 
 public class Game {
     Canvas[] canvases;
 
-
+    private Label scores;
+    int score = 0;
     private NetworkClient networkClient;
     Game(Stage primaryStage, NetworkClient client) {
         canvases = new Canvas[64];
@@ -26,7 +30,7 @@ public class Game {
         GridPane grid = new GridPane();
 
         for(int j=0; j<64; j++){
-            Canvas canvas = new Canvas(100, 100);
+            Canvas canvas = new Canvas(70, 70);
             canvases[j] = canvas;
             canvas.setId(Integer.toString(j));
         }
@@ -50,8 +54,15 @@ public class Game {
         grid.setPadding(new Insets(10,10,10,10));
 
 
-        StackPane root = new StackPane();
-        root.getChildren().add(grid);
+        scores = new Label( "Score Rules: You will get 10 points for each coloured Box" );
+        scores.setFont(new Font("Arial", 20));
+        scores.setAlignment(Pos.CENTER);
+        scores.setStyle("-fx-background-color: grey");
+        GridPane root = new GridPane();
+
+        root.add(scores, 0, 0);
+        root.add(grid, 0, 2);
+
         Scene scene = new Scene(root, grid.getPrefWidth(), grid.getPrefHeight());
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -113,6 +124,9 @@ public class Game {
                                 networkClient.sendLockCanvasRequest(thisCanvasId);
                                 graphicsContext.setFill(networkClient.clientColor);
                                 graphicsContext.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+                                score = getScore(score);
+                                System.out.println(score);
+                                scores.setText("Your Score: " + score);
                                 networkClient.sendOwnCanvasbyID(thisCanvasId, networkClient.clientColor);
                             }
                             else {
@@ -205,4 +219,11 @@ public class Game {
         return fillPercentage;
     }
 
+    private int getScore(int yourScore){
+        yourScore = yourScore+10;
+        return yourScore;
+    }
+
 }
+
+

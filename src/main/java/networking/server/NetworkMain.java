@@ -9,7 +9,7 @@ public class NetworkMain {
 
 	public static void main(String[] args) throws IOException {
 		Scanner in = new Scanner(System.in);
-		NetworkServer server = new NetworkServer(7070);
+		NetworkServer server = new NetworkServer(8070);
 		server.setDaemon(true);
 		server.setName("Server");
 		server.start();
