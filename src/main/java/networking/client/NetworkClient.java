@@ -39,6 +39,8 @@ public class NetworkClient {
     private boolean firstDraw = false;
     boolean[] isLocked;
 
+    int[] clientScores;
+
 
     public NetworkClient(String host, String port) throws IOException, IllegalArgumentException {
         observers = new ArrayList<>();
@@ -177,7 +179,7 @@ public class NetworkClient {
             throw new IllegalStateException("Attempting to draw without registering a canvas");
         }
 
-        DrawInfo draw = new DrawInfo(x, y, currentCanvasID, clientColor, firstDraw, false, false);
+        DrawInfo draw = new DrawInfo(x, y, currentCanvasID, clientColor, firstDraw, false, false, false);
         output.println(NetworkMessage.generateDrawMessage(draw));
 
         firstDraw = false;
@@ -231,6 +233,14 @@ public class NetworkClient {
         output.println(NetworkMessage.addCanvasOwnRequestHeader(stringCanvasID, ownedColor));
     }
 
+    public void sendScores(int score) {
+
+        if(!clientRunning) {
+            throw new IllegalStateException("Attempting to calculate scores without a running client");
+        }
+        String stringScore = Integer.toString(score);
+        output.println(NetworkMessage.getTheWinner(stringScore));
+    }
     /**
      * An implementation of the NetworkObserver interface.
      * Handles receiving information from the server.
@@ -280,7 +290,7 @@ public class NetworkClient {
 
                     break;
                 case NetworkMessage.CANVAS_CLEAR:
-                    DrawInfo clear = new DrawInfo(0, 0, Integer.parseInt(data), Color.TRANSPARENT, false, true, false);
+                    DrawInfo clear = new DrawInfo(0, 0, Integer.parseInt(data), Color.TRANSPARENT, false, true, false, false);
                     drawInfoQueue.add(clear);
 
                     break;
@@ -288,10 +298,15 @@ public class NetworkClient {
                 case NetworkMessage.CANVAS_OWN:
                     String[] msg = data.split("/", 2);
                     Color color = Color.valueOf(msg[1]);
-                    DrawInfo own = new DrawInfo(0, 0, Integer.parseInt(msg[0]), color, false, false, true);
+
+                    DrawInfo own = new DrawInfo(0, 0, Integer.parseInt(msg[0]), color, false, false, true, true );
                     drawInfoQueue.add(own);
 
+                case NetworkMessage.SHOW_WINNER:
+                    int score = Integer.parseInt(data);
+                    clientScores[currentCanvasID] = score;
                     break;
+
                 default:
                     throw new IllegalArgumentException("Received invalid network message");
             }

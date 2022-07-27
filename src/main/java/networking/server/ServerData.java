@@ -28,6 +28,8 @@ class ServerData {
 	// It maps the Socket hashcode to the color hashcode using the .HashCode method
 	public final Map<Integer, Integer> clientColors;
 
+	public final Map<Integer, Integer> clientScores;
+
 	// A non-thread safe map containing all the canvases currently being used
 	// and the hashcode of the socket of the user.
 	// format is socket hashcode, canvasID
@@ -46,6 +48,7 @@ class ServerData {
 		clientSockets = new ArrayList<>();
 		clientColors = new HashMap<>();
 		canvasesInUse = new HashMap<>();
+		clientScores = new HashMap<>();
 
 	}
 
@@ -67,6 +70,9 @@ class ServerData {
 		}
 		synchronized(canvasesInUse) {
 			canvasesInUse.remove(clientSocket.hashCode());
+		}
+		synchronized(clientScores) {
+			clientScores.remove(clientSocket.hashCode());
 		}
 	}
 

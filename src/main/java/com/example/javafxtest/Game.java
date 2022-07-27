@@ -127,6 +127,7 @@ public class Game {
                                 score = getScore(score);
                                 System.out.println(score);
                                 scores.setText("Your Score: " + score);
+                                networkClient.sendScores(score);
                                 networkClient.sendOwnCanvasbyID(thisCanvasId, networkClient.clientColor);
                             }
                             else {

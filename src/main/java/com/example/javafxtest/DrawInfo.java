@@ -25,7 +25,9 @@ public class DrawInfo {
 
     private final boolean ownCanvas;
 
-    public DrawInfo(double x, double y, int canvasID, Color color, boolean pathStart, boolean clearCanvas, boolean ownCanvas) {
+    private final boolean clientScore;
+
+    public DrawInfo(double x, double y, int canvasID, Color color, boolean pathStart, boolean clearCanvas, boolean ownCanvas, boolean clientScore) {
         this.x = x;
         this.y = y;
         this.canvasID = canvasID;
@@ -33,6 +35,7 @@ public class DrawInfo {
         this.pathStart = pathStart;
         this.clearCanvas = clearCanvas;
         this.ownCanvas = ownCanvas;
+        this.clientScore = clientScore;
     }
 
     public double getX() {
@@ -62,6 +65,12 @@ public class DrawInfo {
     public String toJson() {
         return toJson(this);
     }
+
+
+    public boolean getClientScore() {
+        return clientScore;
+    }
+
     public static String toJson(DrawInfo drawInfo) {
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(DrawInfo.class, new DrawInfoAdapter());
@@ -114,6 +123,9 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
         jsonWriter.name("ownCanvas");
         jsonWriter.value(drawInfo.isOwnCanvas());
 
+        jsonWriter.name("clientScore");
+        jsonWriter.value(drawInfo.getClientScore());
+
         jsonWriter.endObject();
     }
 
@@ -130,10 +142,12 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
         boolean pathStart = false;
         boolean clearCanvas = false;
         boolean ownCanvas = false;
+        boolean clientScore = false;
 
         jsonReader.beginObject();
 
         String propertyName = "";
+
         while(jsonReader.hasNext()) {
             JsonToken token = jsonReader.peek();
 
@@ -171,12 +185,15 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
             if (propertyName.equals("ownCanvas")) {
                 ownCanvas = jsonReader.nextBoolean();
             }
+            if (propertyName.equals("clientScore")) {
+                clientScore = jsonReader.nextBoolean();
+            }
         }
 
         jsonReader.endObject();
 
         color = new Color(colorRed, colorGreen, colorBlue, colorOpacity);
-        return new DrawInfo(x, y, canvasID, color, pathStart, clearCanvas, ownCanvas);
+        return new DrawInfo(x, y, canvasID, color, pathStart, clearCanvas, ownCanvas, clientScore);
     }
 }
 
