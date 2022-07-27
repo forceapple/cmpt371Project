@@ -110,7 +110,7 @@ public class Game {
                         double fillPercentage = computeFillPercentage(graphicsContext);
                         if(!networkClient.getIsLockedByID(thisCanvasId)) {
                             if(fillPercentage > 50) {
-                                networkClient.sendLockCanvas(thisCanvasId);
+                                networkClient.sendLockCanvasRequest(thisCanvasId);
                                 graphicsContext.setFill(networkClient.clientColor);
                                 graphicsContext.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
                                 networkClient.sendOwnCanvasbyID(thisCanvasId, networkClient.clientColor);
@@ -118,7 +118,7 @@ public class Game {
                             else {
                                 // CLEAR CANVAS
                                 graphicsContext.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-                                networkClient.sendClearCanvasbyID(thisCanvasId);
+                                networkClient.sendClearCanvasByID(thisCanvasId);
                             }
                         }
 

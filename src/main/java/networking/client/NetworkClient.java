@@ -177,7 +177,7 @@ public class NetworkClient {
             throw new IllegalStateException("Attempting to draw without registering a canvas");
         }
 
-        DrawInfo draw = new DrawInfo(x, y, currentCanvasID, clientColor, firstDraw, false, flase);
+        DrawInfo draw = new DrawInfo(x, y, currentCanvasID, clientColor, firstDraw, false, false);
         output.println(NetworkMessage.generateDrawMessage(draw));
 
         firstDraw = false;
@@ -213,6 +213,22 @@ public class NetworkClient {
         }
         String stringCanvasID = Integer.toString(canvasID);
         output.println(NetworkMessage.addCanvasClearRequestHeader(stringCanvasID));
+    }
+
+    public void sendOwnCanvasbyID(int CanvasID, Color ownedColor) {
+
+        if(!clientRunning) {
+            throw new IllegalStateException("Attempting to own canvas without a running client");
+        }
+
+        if(clientColor == null) {
+            throw new IllegalStateException("Attempting to own canvas without registering a color");
+        }
+        if(currentCanvasID == -1) {
+            throw new IllegalStateException("Attempting to own canvas without registering a canvas");
+        }
+        String stringCanvasID = Integer.toString(CanvasID);
+        output.println(NetworkMessage.addCanvasOwnRequestHeader(stringCanvasID, ownedColor));
     }
 
     /**
