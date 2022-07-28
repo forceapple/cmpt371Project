@@ -54,14 +54,13 @@ public class Game {
         primaryStage.setScene(scene);
         primaryStage.show();
 
+        AnimationTimer animationTimer = getAnimationTimer();
+        animationTimer.start();
     }
 
 
     private void makeCanvasDrawable(GraphicsContext graphicsContext, Canvas canvas) {
         int thisCanvasId = Integer.parseInt(canvas.getId());
-        AnimationTimer animationTimer = getAnimationTimer(canvas);
-
-        animationTimer.start();
 
         canvas.addEventHandler(MouseEvent.MOUSE_PRESSED,
                 new EventHandler<MouseEvent>(){
@@ -126,22 +125,23 @@ public class Game {
                 });
     }
 
-    private AnimationTimer getAnimationTimer(Canvas canvas) {
+    private AnimationTimer getAnimationTimer() {
         AnimationTimer animationTimer = new AnimationTimer() {
             @Override
             public void handle(long l) {
                 // Only try to draw if the queue has something to draw
-                if(networkClient.networkInputs.areInputsAvailable()) {
+                while(networkClient.networkInputs.areInputsAvailable()){
                     DrawInfo info = networkClient.networkInputs.getNextInput();
                     GraphicsContext drawContext = canvases[info.getCanvasID()].getGraphicsContext2D();
+                    Canvas currentCanvas = canvases[info.getCanvasID()];
 
                     if(info.isClearCanvas()){
-                        drawContext.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+                        drawContext.clearRect(0, 0, currentCanvas.getWidth(), currentCanvas.getHeight());
                         ((StackPane)canvases[info.getCanvasID()].getParent()).setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
                     }
                     else if(info.isOwnCanvas()){
                         drawContext.setFill(info.getColor());
-                        drawContext.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+                        drawContext.fillRect(0, 0, currentCanvas.getWidth(), currentCanvas.getHeight());
                         ((StackPane)canvases[info.getCanvasID()].getParent()).setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
                     }
                     else if(info.isPathStart()) {
@@ -155,8 +155,8 @@ public class Game {
                         drawContext.lineTo(info.getX(), info.getY());
                         drawContext.stroke();
                     }
-
                 }
+
             }
         };
         return animationTimer;
