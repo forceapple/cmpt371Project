@@ -148,22 +148,25 @@ public class ClientThread extends Thread {
 				synchronized(output) {
 					output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(false)));
 				}
-			}
-		}
-		synchronized(server.canvasesInUse) {
-			// Send true or false depending on if the canvas is already owned
-			if(server.canvasesInUse.containsValue(canvasID) ) {
-				synchronized(output) {
-					output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(false)));
+			}else {
+				synchronized(server.canvasesInUse) {
+					// Send true or false depending on if the canvas is already owned
+					if(server.canvasesInUse.containsValue(canvasID) ) {
+						synchronized(output) {
+							output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(false)));
+						}
+					}
+					else {
+						server.canvasesInUse.put(socket.hashCode(), canvasID);
+						synchronized(output) {
+							output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(true)));
+						}
+					}
 				}
 			}
-			else {
-				server.canvasesInUse.put(socket.hashCode(), canvasID);
-				synchronized(output) {
-					output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(true)));
-				}
-			}
 		}
+
+
 	}
 
 	private void processCanvasRelease() {
