@@ -8,7 +8,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.*;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -38,7 +38,6 @@ public class NetworkClient {
     private boolean clientRunning = false;
     private boolean firstDraw = false;
 
-
     public NetworkClient(String host, String port) throws IOException, IllegalArgumentException {
         observers = new ArrayList<>();
         networkInputs = new InputHandler();
@@ -47,7 +46,6 @@ public class NetworkClient {
         serverResponseBool = false;
         currentCanvasID = -1;
         socket = new Socket(host, Integer.parseInt(port));
-
         try {
 
             output = new PrintWriter(socket.getOutputStream(), true);
@@ -56,9 +54,6 @@ public class NetworkClient {
         catch(IOException e) {
             e.printStackTrace();
         }
-
-
-
 
         ClientNetworkThread networkThread = new ClientNetworkThread(input, observers);
         networkThread.setName("Client Network Thread");
@@ -171,10 +166,62 @@ public class NetworkClient {
             throw new IllegalStateException("Attempting to draw without registering a canvas");
         }
 
-        DrawInfo draw = new DrawInfo(x, y, currentCanvasID, clientColor, firstDraw);
+        DrawInfo draw = new DrawInfo(x, y, currentCanvasID, clientColor, firstDraw, false, false);
         output.println(NetworkMessage.generateDrawMessage(draw));
 
         firstDraw = false;
+    }
+    /**
+     * Sends a message to the server indicate the current canvas needs to be locked for other clients
+     */
+    public void sendLockCanvasRequest() {
+
+        if(!clientRunning) {
+            throw new IllegalStateException("Attempting to lock canvas without a running client");
+        }
+
+        if(clientColor == null) {
+            throw new IllegalStateException("Attempting to lock canvas without registering a color");
+        }
+        if(currentCanvasID == -1) {
+            throw new IllegalStateException("Attempting to lock canvas without registering a canvas");
+        }
+        String stringCanvasID = Integer.toString(currentCanvasID);
+        output.println(NetworkMessage.addCanvasLockRequestHeader(stringCanvasID));
+    }
+    /**
+     * Sends a message to the server indicate the current canvas needs to be cleared for other clients
+     */
+    public void sendClearCanvas() {
+
+        if(!clientRunning) {
+            throw new IllegalStateException("Attempting to clear canvas without a running client");
+        }
+
+        if(clientColor == null) {
+            throw new IllegalStateException("Attempting to clear canvas without registering a color");
+        }
+        if(currentCanvasID == -1) {
+            throw new IllegalStateException("Attempting to clear canvas without registering a canvas");
+        }
+        String stringCanvasID = Integer.toString(currentCanvasID);
+        output.println(NetworkMessage.addCanvasClearRequestHeader(stringCanvasID));
+    }
+
+    public void sendOwnCanvas() {
+
+        if(!clientRunning) {
+            throw new IllegalStateException("Attempting to own canvas without a running client");
+        }
+
+        if(clientColor == null) {
+            throw new IllegalStateException("Attempting to own canvas without registering a color");
+        }
+        if(currentCanvasID == -1) {
+            throw new IllegalStateException("Attempting to own canvas without registering a canvas");
+        }
+        String stringCanvasID = Integer.toString(currentCanvasID);
+        output.println(NetworkMessage.addCanvasOwnRequestHeader(stringCanvasID, clientColor));
     }
 
     /**
@@ -220,11 +267,25 @@ public class NetworkClient {
                         serverResponseBoolSync.notify();
                     }
                     break;
+                case NetworkMessage.CANVAS_LOCK:
+                    break;
+                case NetworkMessage.CANVAS_CLEAR:
+                    DrawInfo clear = new DrawInfo(0, 0, Integer.parseInt(data), Color.TRANSPARENT, false, true, false);
+                    drawInfoQueue.add(clear);
+                    break;
+                case NetworkMessage.CANVAS_OWN:
+                    String[] msg = data.split("/", 2);
+                    Color color = Color.valueOf(msg[1]);
+                    DrawInfo own = new DrawInfo(0, 0, Integer.parseInt(msg[0]), color, false, false, true);
+                    drawInfoQueue.add(own);
+
+                    break;
                 default:
                     throw new IllegalArgumentException("Received invalid network message");
             }
 
         }
     }
+
 
 }

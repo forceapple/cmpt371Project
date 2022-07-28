@@ -1,9 +1,11 @@
 package networking.server;
 
-import java.io.*;
+import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A singleton class that contains all the data that needs to be shared across the different server threads
@@ -30,6 +32,7 @@ class ServerData {
 	// and the hashcode of the socket of the user.
 	// format is socket hashcode, canvasID
 	public final Map<Integer, Integer> canvasesInUse;
+	public Boolean[] isLocked;
 
 	public static ServerData getInstance() {
 		if(instance == null) {
@@ -44,6 +47,12 @@ class ServerData {
 		clientSockets = new ArrayList<>();
 		clientColors = new HashMap<>();
 		canvasesInUse = new HashMap<>();
+		isLocked = new Boolean[64];
+
+		for(int i=0; i<64; i++){
+			isLocked[i] = false;
+		}
+
 	}
 
 	public int clientCount() {
@@ -67,4 +76,9 @@ class ServerData {
 		}
 	}
 
+	public void lockCanvasByID(int canvasID) {
+		synchronized(isLocked) {
+			this.isLocked[canvasID] = true;
+		}
+	}
 }

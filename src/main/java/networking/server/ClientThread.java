@@ -1,6 +1,7 @@
 package networking.server;
 
 import com.example.javafxtest.DrawInfo;
+import javafx.scene.paint.Color;
 import networking.NetworkMessage;
 
 import java.io.*;
@@ -88,6 +89,15 @@ public class ClientThread extends Thread {
 			case NetworkMessage.COLOR_REQUEST_HEADER:
 				processColorRequest(data);
 				break;
+			case NetworkMessage.CANVAS_LOCK:
+				processLockMessage(data);
+				break;
+			case NetworkMessage.CANVAS_CLEAR:
+				processCanvasClearMessage(data);
+				break;
+			case NetworkMessage.CANVAS_OWN:
+				processCanvasOwnMessage(data);
+				break;
 			default:
 				// TODO: Don't throw exception on server, instead sent some error to client
 				throw new IllegalArgumentException("Invalid Message being sent over network");
@@ -132,20 +142,31 @@ public class ClientThread extends Thread {
 	private void processCanvasRequest(String data) {
 		int canvasID = Integer.parseInt(data);
 
-		synchronized(server.canvasesInUse) {
-			// Send true or false depending on if the canvas is already owned
-			if(server.canvasesInUse.containsValue(canvasID) ) {
+		synchronized(server.isLocked) {
+			if(server.isLocked[canvasID]){
+				// Send true or false depending on if the canvas is already locked
 				synchronized(output) {
 					output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(false)));
 				}
-			}
-			else {
-				server.canvasesInUse.put(socket.hashCode(), canvasID);
-				synchronized(output) {
-					output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(true)));
+			}else {
+				synchronized(server.canvasesInUse) {
+					// Send true or false depending on if the canvas is already owned
+					if(server.canvasesInUse.containsValue(canvasID) ) {
+						synchronized(output) {
+							output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(false)));
+						}
+					}
+					else {
+						server.canvasesInUse.put(socket.hashCode(), canvasID);
+						synchronized(output) {
+							output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(true)));
+						}
+					}
 				}
 			}
 		}
+
+
 	}
 
 	private void processCanvasRelease() {
@@ -153,6 +174,7 @@ public class ClientThread extends Thread {
 			server.canvasesInUse.remove(socket.hashCode());
 		}
 	}
+
 
 	private void processColorRequest(String data) {
 		int colorHash = Integer.parseInt(data);
@@ -167,6 +189,30 @@ public class ClientThread extends Thread {
 				synchronized(output) {
 					output.println(NetworkMessage.addColorRequestHeader(Boolean.toString(true)));
 				}
+			}
+		}
+	}
+
+	private void processLockMessage(String data) {
+		int canvasID = Integer.parseInt(data);
+		server.lockCanvasByID(canvasID);
+	}
+
+	private void processCanvasClearMessage(String data) {
+		synchronized (server.clientOutputs) {
+			for (PrintWriter out : server.clientOutputs) {
+				out.println(NetworkMessage.addCanvasClearRequestHeader(data));
+			}
+		}
+	}
+
+	private void processCanvasOwnMessage(String data) {
+		synchronized (server.clientOutputs) {
+			String id = data.split("/", 2)[0];
+			String stringColor = data.split("/", 2)[1];
+			Color color = Color.valueOf(stringColor);
+			for (PrintWriter out : server.clientOutputs) {
+				out.println(NetworkMessage.addCanvasOwnRequestHeader(id, color));
 			}
 		}
 	}

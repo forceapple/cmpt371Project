@@ -1,6 +1,7 @@
 package networking;
 
 import com.example.javafxtest.DrawInfo;
+import javafx.scene.paint.Color;
 
 /**
  * A class containing static fields and methods related to sending messages over the network.
@@ -37,11 +38,31 @@ public class NetworkMessage {
      *      Canvas Release Messages:
      *          Use the CANVAS_RELEASE_HEADER and an empty data section
      *          The server does not send a response back for these messages
+     *
+     *
+     *      Canvas Lock message:
+     *          Sending Request to Server:
+     *              Uses CANVAS_LOCK + .toString of an int indicating which canvas id to lock and sends it to the server
+     *
+     *
+ *          Canvas Clear message:
+     *           Sending Request to Server:
+     *                 Uses CANVAS_CLEAR + .toString of an int indicating which canvas id to clear and
+     *                 sends it to the server
+     *
+     *            Server Responses:
+     *                 Uses CANVAS_CLEAR + .toString of an int indicating which canvas id to clear. Currently, it
+     *                 relays which canvas to clear to all clients.
+     *
+     *
      */
     public static final String DRAW_MESSAGE_HEADER = "DRAW";
     public static final String COLOR_REQUEST_HEADER = "COLOR_REQUEST";
     public static final String CANVAS_REQUEST_HEADER = "CANVAS_REQUEST";
     public static final String CANVAS_RELEASE_HEADER = "CANVAS_RELEASE";
+    public static final String CANVAS_LOCK = "CANVAS_LOCK";
+    public static final String CANVAS_CLEAR = "CANVAS_CLEAR";
+    public static final String CANVAS_OWN = "CANVAS_OWN";
 
     public static String addDrawMessageHeader(String msg) {
         return DRAW_MESSAGE_HEADER + "-" + msg;
@@ -54,6 +75,11 @@ public class NetworkMessage {
     public static String addCanvasRequestHeader(String msg) {
         return CANVAS_REQUEST_HEADER + "-" + msg;
     }
+    public static String addCanvasLockRequestHeader(String msg) {
+        return CANVAS_LOCK + "-" + msg;
+    }
+    public static String addCanvasClearRequestHeader(String msg) {return CANVAS_CLEAR + "-" + msg; }
+    public static String addCanvasOwnRequestHeader(String msg, Color ownedColor) {return CANVAS_OWN + "-" + msg + "/" + ownedColor; }
 
     /**
      * Generates a message indicating to the server to release the currently owned canvas

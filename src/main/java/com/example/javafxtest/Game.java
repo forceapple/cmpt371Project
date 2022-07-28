@@ -7,7 +7,6 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.PixelReader;
-import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
@@ -16,10 +15,11 @@ import javafx.stage.Stage;
 import networking.client.NetworkClient;
 
 public class Game {
-    Canvas[] canvases;
+    private Canvas[] canvases;
     private NetworkClient networkClient;
     Game(Stage primaryStage, NetworkClient client) {
         canvases = new Canvas[64];
+
         this.networkClient = client;
         GridPane grid = new GridPane();
 
@@ -58,40 +58,13 @@ public class Game {
 
 
     private void makeCanvasDrawable(GraphicsContext graphicsContext, Canvas canvas) {
-        PixelWriter pWriter = graphicsContext.getPixelWriter();
-        PixelWriter finalPWriter = pWriter;
         int thisCanvasId = Integer.parseInt(canvas.getId());
-        // This should be in another function
-        AnimationTimer animationTimer = new AnimationTimer() {
-            @Override
-            public void handle(long l) {
-                // Only try to draw if the queue has something to draw
-                if(networkClient.networkInputs.areInputsAvailable()) {
-                    DrawInfo info = networkClient.networkInputs.getNextInput();
-                    GraphicsContext drawContext = canvases[info.getCanvasID()].getGraphicsContext2D();
-
-                    if(info.isPathStart()) {
-                        ((StackPane)canvases[info.getCanvasID()].getParent()).setBorder(new Border(new BorderStroke(info.getColor(), BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
-                        drawContext.setStroke(info.getColor());
-                        drawContext.beginPath();
-                        drawContext.moveTo(info.getX(), info.getY());
-                        drawContext.stroke();
-                    }
-                    else {
-                        drawContext.lineTo(info.getX(), info.getY());
-                        drawContext.stroke();
-                    }
-
-                }
-            }
-        };
+        AnimationTimer animationTimer = getAnimationTimer(canvas);
 
         animationTimer.start();
 
-        pWriter = graphicsContext.getPixelWriter();
         canvas.addEventHandler(MouseEvent.MOUSE_PRESSED,
                 new EventHandler<MouseEvent>(){
-
                     @Override
                     public void handle(MouseEvent event) {
 
@@ -117,7 +90,6 @@ public class Game {
                         if(networkClient.currentCanvasID != thisCanvasId) {
                             return;
                         }
-
                         graphicsContext.lineTo(event.getX(), event.getY());
                         graphicsContext.stroke();
 
@@ -130,14 +102,65 @@ public class Game {
                     @Override
                     public void handle(MouseEvent event) {
                         double fillPercentage = computeFillPercentage(graphicsContext);
+
+                        //prevent mouse release to clear the canvas.
+                        if(networkClient.currentCanvasID != thisCanvasId) {
+                            return;
+                        }
+
+                        if(fillPercentage > 50) {
+                            networkClient.sendLockCanvasRequest();
+                            graphicsContext.setFill(networkClient.clientColor);
+                            graphicsContext.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+                            networkClient.sendOwnCanvas();
+                        }
+                        else {
+                            // CLEAR CANVAS
+                            graphicsContext.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+                            networkClient.sendClearCanvas();
+                        }
+
                         System.out.println("filled %: " + fillPercentage);
                         networkClient.releaseCanvas();
-
-
                     }
                 });
     }
 
+    private AnimationTimer getAnimationTimer(Canvas canvas) {
+        AnimationTimer animationTimer = new AnimationTimer() {
+            @Override
+            public void handle(long l) {
+                // Only try to draw if the queue has something to draw
+                if(networkClient.networkInputs.areInputsAvailable()) {
+                    DrawInfo info = networkClient.networkInputs.getNextInput();
+                    GraphicsContext drawContext = canvases[info.getCanvasID()].getGraphicsContext2D();
+
+                    if(info.isClearCanvas()){
+                        drawContext.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+                        ((StackPane)canvases[info.getCanvasID()].getParent()).setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
+                    }
+                    else if(info.isOwnCanvas()){
+                        drawContext.setFill(info.getColor());
+                        drawContext.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+                        ((StackPane)canvases[info.getCanvasID()].getParent()).setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
+                    }
+                    else if(info.isPathStart()) {
+                        ((StackPane)canvases[info.getCanvasID()].getParent()).setBorder(new Border(new BorderStroke(info.getColor(), BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
+                        drawContext.setStroke(info.getColor());
+                        drawContext.beginPath();
+                        drawContext.moveTo(info.getX(), info.getY());
+                        drawContext.stroke();
+                    }
+                    else {
+                        drawContext.lineTo(info.getX(), info.getY());
+                        drawContext.stroke();
+                    }
+
+                }
+            }
+        };
+        return animationTimer;
+    }
 
 
     private double computeFillPercentage(GraphicsContext graphicsContext) {
