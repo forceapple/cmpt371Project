@@ -142,20 +142,31 @@ public class ClientThread extends Thread {
 	private void processCanvasRequest(String data) {
 		int canvasID = Integer.parseInt(data);
 
-		synchronized(server.canvasesInUse) {
-			// Send true or false depending on if the canvas is already owned
-			if(server.canvasesInUse.containsValue(canvasID) ) {
+		synchronized(server.isLocked) {
+			if(server.isLocked[canvasID]){
+				// Send true or false depending on if the canvas is already locked
 				synchronized(output) {
 					output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(false)));
 				}
-			}
-			else {
-				server.canvasesInUse.put(socket.hashCode(), canvasID);
-				synchronized(output) {
-					output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(true)));
+			}else {
+				synchronized(server.canvasesInUse) {
+					// Send true or false depending on if the canvas is already owned
+					if(server.canvasesInUse.containsValue(canvasID) ) {
+						synchronized(output) {
+							output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(false)));
+						}
+					}
+					else {
+						server.canvasesInUse.put(socket.hashCode(), canvasID);
+						synchronized(output) {
+							output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(true)));
+						}
+					}
 				}
 			}
 		}
+
+
 	}
 
 	private void processCanvasRelease() {
@@ -163,6 +174,7 @@ public class ClientThread extends Thread {
 			server.canvasesInUse.remove(socket.hashCode());
 		}
 	}
+
 
 	private void processColorRequest(String data) {
 		int colorHash = Integer.parseInt(data);
@@ -182,11 +194,8 @@ public class ClientThread extends Thread {
 	}
 
 	private void processLockMessage(String data) {
-		synchronized (server.clientOutputs){
-			for(PrintWriter out : server.clientOutputs) {
-				out.println(NetworkMessage.addCanvasLockRequestHeader(data));
-			}
-		}
+		int canvasID = Integer.parseInt(data);
+		server.lockCanvasByID(canvasID);
 	}
 
 	private void processCanvasClearMessage(String data) {
