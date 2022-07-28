@@ -142,26 +142,25 @@ public class ClientThread extends Thread {
 	private void processCanvasRequest(String data) {
 		int canvasID = Integer.parseInt(data);
 
-		if(server.isLocked[canvasID]){
-			synchronized(server.isLocked) {
+		synchronized(server.isLocked) {
+			if(server.isLocked[canvasID]){
 				// Send true or false depending on if the canvas is already locked
 				synchronized(output) {
 					output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(false)));
 				}
 			}
-		} else{
-			synchronized(server.canvasesInUse) {
-				// Send true or false depending on if the canvas is already owned
-				if(server.canvasesInUse.containsValue(canvasID) ) {
-					synchronized(output) {
-						output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(false)));
-					}
+		}
+		synchronized(server.canvasesInUse) {
+			// Send true or false depending on if the canvas is already owned
+			if(server.canvasesInUse.containsValue(canvasID) ) {
+				synchronized(output) {
+					output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(false)));
 				}
-				else {
-					server.canvasesInUse.put(socket.hashCode(), canvasID);
-					synchronized(output) {
-						output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(true)));
-					}
+			}
+			else {
+				server.canvasesInUse.put(socket.hashCode(), canvasID);
+				synchronized(output) {
+					output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(true)));
 				}
 			}
 		}

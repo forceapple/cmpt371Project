@@ -77,6 +77,8 @@ class ServerData {
 	}
 
 	public void lockCanvasByID(int canvasID) {
-		this.isLocked[canvasID] = true;
+		synchronized(isLocked) {
+			this.isLocked[canvasID] = true;
+		}
 	}
 }
