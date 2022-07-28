@@ -272,9 +272,7 @@ public class NetworkClient {
                 case NetworkMessage.CANVAS_CLEAR:
                     DrawInfo clear = new DrawInfo(0, 0, Integer.parseInt(data), Color.TRANSPARENT, false, true, false);
                     drawInfoQueue.add(clear);
-
                     break;
-
                 case NetworkMessage.CANVAS_OWN:
                     String[] msg = data.split("/", 2);
                     Color color = Color.valueOf(msg[1]);
