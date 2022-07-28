@@ -130,32 +130,30 @@ public class Game {
             @Override
             public void handle(long l) {
                 // Only try to draw if the queue has something to draw
-                for(int i=0; i<networkClient.networkInputs.getDrawInfoQueueSize(); i++){
-                    if(networkClient.networkInputs.areInputsAvailable()) {
-                        DrawInfo info = networkClient.networkInputs.getNextInput();
-                        GraphicsContext drawContext = canvases[info.getCanvasID()].getGraphicsContext2D();
-                        Canvas currentCanvas = canvases[info.getCanvasID()];
+                while(networkClient.networkInputs.areInputsAvailable()){
+                    DrawInfo info = networkClient.networkInputs.getNextInput();
+                    GraphicsContext drawContext = canvases[info.getCanvasID()].getGraphicsContext2D();
+                    Canvas currentCanvas = canvases[info.getCanvasID()];
 
-                        if(info.isClearCanvas()){
-                            drawContext.clearRect(0, 0, currentCanvas.getWidth(), currentCanvas.getHeight());
-                            ((StackPane)canvases[info.getCanvasID()].getParent()).setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
-                        }
-                        else if(info.isOwnCanvas()){
-                            drawContext.setFill(info.getColor());
-                            drawContext.fillRect(0, 0, currentCanvas.getWidth(), currentCanvas.getHeight());
-                            ((StackPane)canvases[info.getCanvasID()].getParent()).setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
-                        }
-                        else if(info.isPathStart()) {
-                            ((StackPane)canvases[info.getCanvasID()].getParent()).setBorder(new Border(new BorderStroke(info.getColor(), BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
-                            drawContext.setStroke(info.getColor());
-                            drawContext.beginPath();
-                            drawContext.moveTo(info.getX(), info.getY());
-                            drawContext.stroke();
-                        }
-                        else {
-                            drawContext.lineTo(info.getX(), info.getY());
-                            drawContext.stroke();
-                        }
+                    if(info.isClearCanvas()){
+                        drawContext.clearRect(0, 0, currentCanvas.getWidth(), currentCanvas.getHeight());
+                        ((StackPane)canvases[info.getCanvasID()].getParent()).setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
+                    }
+                    else if(info.isOwnCanvas()){
+                        drawContext.setFill(info.getColor());
+                        drawContext.fillRect(0, 0, currentCanvas.getWidth(), currentCanvas.getHeight());
+                        ((StackPane)canvases[info.getCanvasID()].getParent()).setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
+                    }
+                    else if(info.isPathStart()) {
+                        ((StackPane)canvases[info.getCanvasID()].getParent()).setBorder(new Border(new BorderStroke(info.getColor(), BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
+                        drawContext.setStroke(info.getColor());
+                        drawContext.beginPath();
+                        drawContext.moveTo(info.getX(), info.getY());
+                        drawContext.stroke();
+                    }
+                    else {
+                        drawContext.lineTo(info.getX(), info.getY());
+                        drawContext.stroke();
                     }
                 }
 

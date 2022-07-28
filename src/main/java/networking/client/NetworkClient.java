@@ -244,10 +244,6 @@ public class NetworkClient {
             return drawInfoQueue.poll();
         }
 
-        public int getDrawInfoQueueSize() {
-            return drawInfoQueue.size();
-        }
-
         /**
          * This function is called everytime the client receives any message from the server.
          * Note: This function runs in the ClientNetworkThread
