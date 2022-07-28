@@ -37,8 +37,6 @@ public class NetworkClient {
 
     private boolean clientRunning = false;
     private boolean firstDraw = false;
-//    boolean[] isLocked;
-
 
     public NetworkClient(String host, String port) throws IOException, IllegalArgumentException {
         observers = new ArrayList<>();
@@ -262,7 +260,6 @@ public class NetworkClient {
                     break;
 
                     // Both cases result in the same code
-                case NetworkMessage.CANVAS_LOCK_CHECK:
                 case NetworkMessage.CANVAS_REQUEST_HEADER:
                 case NetworkMessage.COLOR_REQUEST_HEADER:
                     synchronized (serverResponseBoolSync) {
@@ -290,32 +287,6 @@ public class NetworkClient {
             }
 
         }
-    }
-    /**
-     * This function checks with the server if this canvas can be drawn on when the canvas is not in use
-     * Note: This check is for checking when the canvas is locked/filled in. Since canvas isn't in use, currentCanvasID
-     * will be -1
-     * @param canvasId ID of canvas to check
-     */
-    public boolean checkIfCanvasIsLocked(int canvasId) {
-        // Should default to false in timeout
-        serverResponseBool = false;
-
-        if(!clientRunning) {
-            throw new IllegalStateException("Attempting to check if canvas is locked without a running client");
-        }
-
-        output.println(NetworkMessage.addCanvasIsLockedRequestHeader(Integer.toString(canvasId)));
-
-        synchronized(serverResponseBoolSync) {
-            try {
-                serverResponseBoolSync.wait(200);
-            }
-            catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return serverResponseBool;
     }
 
 

@@ -98,9 +98,6 @@ public class ClientThread extends Thread {
 			case NetworkMessage.CANVAS_OWN:
 				processCanvasOwnMessage(data);
 				break;
-			case NetworkMessage.CANVAS_LOCK_CHECK:
-				processLockCanvasCheckRequest(data);
-				break;
 			default:
 				// TODO: Don't throw exception on server, instead sent some error to client
 				throw new IllegalArgumentException("Invalid Message being sent over network");
@@ -145,17 +142,26 @@ public class ClientThread extends Thread {
 	private void processCanvasRequest(String data) {
 		int canvasID = Integer.parseInt(data);
 
-		synchronized(server.canvasesInUse) {
-			// Send true or false depending on if the canvas is already owned
-			if(server.canvasesInUse.containsValue(canvasID) ) {
+		if(server.isLocked[canvasID]){
+			synchronized(server.isLocked[canvasID]) {
+				// Send true or false depending on if the canvas is already locked
 				synchronized(output) {
 					output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(false)));
 				}
 			}
-			else {
-				server.canvasesInUse.put(socket.hashCode(), canvasID);
-				synchronized(output) {
-					output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(true)));
+		} else{
+			synchronized(server.canvasesInUse) {
+				// Send true or false depending on if the canvas is already owned
+				if(server.canvasesInUse.containsValue(canvasID) ) {
+					synchronized(output) {
+						output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(false)));
+					}
+				}
+				else {
+					server.canvasesInUse.put(socket.hashCode(), canvasID);
+					synchronized(output) {
+						output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(true)));
+					}
 				}
 			}
 		}
@@ -188,24 +194,6 @@ public class ClientThread extends Thread {
 	private void processLockMessage(String data) {
 		int canvasID = Integer.parseInt(data);
 		server.lockCanvasByID(canvasID);
-	}
-
-	private void processLockCanvasCheckRequest(String data) {
-		int canvasID = Integer.parseInt(data);
-
-		synchronized(server.isLocked) {
-			// Send true or false depending on if the canvas is already locked
-			if(!server.isLocked[canvasID]) {
-				synchronized(output) {
-					output.println(NetworkMessage.addCanvasIsLockedRequestHeader(Boolean.toString(false)));
-				}
-			}
-			else {
-				synchronized(output) {
-					output.println(NetworkMessage.addCanvasIsLockedRequestHeader(Boolean.toString(true)));
-				}
-			}
-		}
 	}
 
 	private void processCanvasClearMessage(String data) {

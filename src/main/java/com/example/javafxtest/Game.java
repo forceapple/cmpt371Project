@@ -15,13 +15,10 @@ import javafx.stage.Stage;
 import networking.client.NetworkClient;
 
 public class Game {
-    Canvas[] canvases;
-    private boolean isLocked[];
-
+    private Canvas[] canvases;
     private NetworkClient networkClient;
     Game(Stage primaryStage, NetworkClient client) {
         canvases = new Canvas[64];
-        isLocked = new boolean[64];
 
         this.networkClient = client;
         GridPane grid = new GridPane();
@@ -29,7 +26,6 @@ public class Game {
         for(int j=0; j<64; j++){
             Canvas canvas = new Canvas(100, 100);
             canvases[j] = canvas;
-            isLocked[j] = false;
             canvas.setId(Integer.toString(j));
         }
         int count = 0;
@@ -76,12 +72,6 @@ public class Game {
                         if(!networkClient.selectCanvasForDrawing(thisCanvasId)) {
                             return;
                         }
-                        //sets local isLock to server's so mouse drag event doesn't need to call server continuously
-                        if(networkClient.checkIfCanvasIsLocked(thisCanvasId)){
-                            isLocked[thisCanvasId] = true;
-                            return;
-                        }
-
 
                         graphicsContext.setStroke(networkClient.clientColor);
                         graphicsContext.beginPath();
@@ -89,7 +79,6 @@ public class Game {
                         graphicsContext.stroke();
 
                         networkClient.sendDrawing(event.getX(), event.getY());
-
                     }
                 });
 
@@ -98,14 +87,13 @@ public class Game {
                     @Override
                     public void handle(MouseEvent event) {
 
-                        if(networkClient.currentCanvasID != thisCanvasId || isLocked[thisCanvasId]) {
+                        if(networkClient.currentCanvasID != thisCanvasId) {
                             return;
                         }
                         graphicsContext.lineTo(event.getX(), event.getY());
                         graphicsContext.stroke();
 
                         networkClient.sendDrawing(event.getX(), event.getY());
-
                     }
                 });
 
@@ -116,12 +104,12 @@ public class Game {
                         double fillPercentage = computeFillPercentage(graphicsContext);
 
                         //prevent mouse release to clear the canvas.
-                        if(networkClient.checkIfCanvasIsLocked(thisCanvasId)) {
+                        if(networkClient.currentCanvasID != thisCanvasId) {
                             return;
                         }
-                        else if(fillPercentage > 50) {
+
+                        if(fillPercentage > 50) {
                             networkClient.sendLockCanvasRequest();
-                            isLocked[thisCanvasId] = true;
                             graphicsContext.setFill(networkClient.clientColor);
                             graphicsContext.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
                             networkClient.sendOwnCanvas();

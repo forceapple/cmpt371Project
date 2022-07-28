@@ -44,9 +44,6 @@ public class NetworkMessage {
      *          Sending Request to Server:
      *              Uses CANVAS_LOCK + .toString of an int indicating which canvas id to lock and sends it to the server
      *
-     *         Server Responses:
-     *               Uses CANVAS_LOCK + .toString of an int indicating which canvas id to lock. Currently, it
-     *               only relays the message to all other clients
      *
  *          Canvas Clear message:
      *           Sending Request to Server:
@@ -66,7 +63,6 @@ public class NetworkMessage {
     public static final String CANVAS_LOCK = "CANVAS_LOCK";
     public static final String CANVAS_CLEAR = "CANVAS_CLEAR";
     public static final String CANVAS_OWN = "CANVAS_OWN";
-    public static final String CANVAS_LOCK_CHECK = "CANVAS_LOCK_CHECK";
 
     public static String addDrawMessageHeader(String msg) {
         return DRAW_MESSAGE_HEADER + "-" + msg;
@@ -79,15 +75,11 @@ public class NetworkMessage {
     public static String addCanvasRequestHeader(String msg) {
         return CANVAS_REQUEST_HEADER + "-" + msg;
     }
-
     public static String addCanvasLockRequestHeader(String msg) {
         return CANVAS_LOCK + "-" + msg;
     }
     public static String addCanvasClearRequestHeader(String msg) {return CANVAS_CLEAR + "-" + msg; }
     public static String addCanvasOwnRequestHeader(String msg, Color ownedColor) {return CANVAS_OWN + "-" + msg + "/" + ownedColor; }
-    public static String addCanvasIsLockedRequestHeader(String msg) {
-        return CANVAS_LOCK_CHECK + "-" + msg;
-    }
 
     /**
      * Generates a message indicating to the server to release the currently owned canvas

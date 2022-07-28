@@ -78,6 +78,5 @@ class ServerData {
 
 	public void lockCanvasByID(int canvasID) {
 		this.isLocked[canvasID] = true;
-		System.out.println(isLocked[canvasID]);
 	}
 }
