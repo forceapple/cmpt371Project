@@ -130,7 +130,7 @@ public class Game {
             @Override
             public void handle(long l) {
                 // Only try to draw if the queue has something to draw
-                for(int i=0; i<canvases.length; i++){
+                for(int i=0; i<networkClient.networkInputs.getDrawInfoQueueSize(); i++){
                     if(networkClient.networkInputs.areInputsAvailable()) {
                         DrawInfo info = networkClient.networkInputs.getNextInput();
                         GraphicsContext drawContext = canvases[info.getCanvasID()].getGraphicsContext2D();
