@@ -143,7 +143,7 @@ public class ClientThread extends Thread {
 		int canvasID = Integer.parseInt(data);
 
 		if(server.isLocked[canvasID]){
-			synchronized(server.isLocked[canvasID]) {
+			synchronized(server.isLocked) {
 				// Send true or false depending on if the canvas is already locked
 				synchronized(output) {
 					output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(false)));
