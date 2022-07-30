@@ -1,11 +1,12 @@
 package networking.server;
 
+import javafx.scene.paint.Color;
+import javafx.util.Pair;
+import networking.NetworkMessage;
+
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * A singleton class that contains all the data that needs to be shared across the different server threads
@@ -32,7 +33,12 @@ class ServerData {
 	// and the hashcode of the socket of the user.
 	// format is socket hashcode, canvasID
 	public final Map<Integer, Integer> canvasesInUse;
+
+	// A map to associate a given client with their score
+	public final Map<Color, Integer> clientScores;
 	public Boolean[] isLocked;
+
+	public Boolean[] isColoured;
 
 	public static ServerData getInstance() {
 		if(instance == null) {
@@ -47,10 +53,18 @@ class ServerData {
 		clientSockets = new ArrayList<>();
 		clientColors = new HashMap<>();
 		canvasesInUse = new HashMap<>();
-		isLocked = new Boolean[64];
+		clientScores = new HashMap<>();
 
-		for(int i=0; i<64; i++){
+		isLocked = new Boolean[8];
+
+		for(int i=0; i<8; i++){
 			isLocked[i] = false;
+		}
+
+		//marking every canvas as not coloured
+		isColoured = new Boolean[8];
+		for(int i=0; i<8; i++){
+			isColoured[i] = false;
 		}
 
 	}
@@ -81,4 +95,41 @@ class ServerData {
 			this.isLocked[canvasID] = true;
 		}
 	}
+
+	public boolean storeScore(int score, Color color, int canvasID){
+         clientScores.put(color, score);
+		 System.out.println(clientScores);
+
+		synchronized(isColoured) {
+			this.isColoured[canvasID] = true;
+		}
+
+		//checking if all canvases are coloured
+		boolean allTrue = true;
+		for (boolean i : isColoured)
+		{
+			if (!i)
+			{
+				allTrue = false;
+				break;
+			}
+		}
+		return allTrue;
+	}
+
+	//checking if a player won a game or if there is a tie
+	public Map<Color, Integer> checkWinner(){
+		int highestScores =(Collections.max(clientScores.values()));// This will return highest Scores
+		Map <Color, Integer> winners = new HashMap<>();
+
+		for (Map.Entry<Color, Integer> entry : clientScores.entrySet()) {  // Iterate through hashmap
+			if (entry.getValue()== highestScores) {
+				winners.put(entry.getKey(), entry.getValue());
+			}
+		}
+		return winners;
+	}
+
+
+
 }

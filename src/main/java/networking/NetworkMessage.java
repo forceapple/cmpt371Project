@@ -64,7 +64,7 @@ public class NetworkMessage {
     public static final String CANVAS_CLEAR = "CANVAS_CLEAR";
     public static final String CANVAS_OWN = "CANVAS_OWN";
 
-    public static final String SHOW_WINNER = "SHOW_WINNER";
+    public static final String CALCULATE_SCORE = "CALCULATE_SCORE";
 
     public static String addDrawMessageHeader(String msg) {
         return DRAW_MESSAGE_HEADER + "-" + msg;
@@ -83,7 +83,7 @@ public class NetworkMessage {
     public static String addCanvasClearRequestHeader(String msg) {return CANVAS_CLEAR + "-" + msg; }
     public static String addCanvasOwnRequestHeader(String msg, Color ownedColor) {return CANVAS_OWN + "-" + msg + "/" + ownedColor; }
 
-    public static String getTheWinner(String msg){return SHOW_WINNER + "-" + msg; }
+    public static String addScoresRequestHeader(String msg, Color clientColour, int canvasID){return CALCULATE_SCORE + "-" + msg + "/" + clientColour + "/" + canvasID; }
 
     /**
      * Generates a message indicating to the server to release the currently owned canvas

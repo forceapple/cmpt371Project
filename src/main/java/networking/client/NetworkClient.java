@@ -1,6 +1,10 @@
 package networking.client;
 
 import com.example.javafxtest.DrawInfo;
+import com.example.javafxtest.LaunchScreenController;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import networking.NetworkMessage;
 
@@ -166,7 +170,7 @@ public class NetworkClient {
             throw new IllegalStateException("Attempting to draw without registering a canvas");
         }
 
-        DrawInfo draw = new DrawInfo(x, y, currentCanvasID, clientColor, firstDraw, false, false);
+        DrawInfo draw = new DrawInfo(x, y, currentCanvasID, clientColor, firstDraw, false, false, false, 0, "");
         output.println(NetworkMessage.generateDrawMessage(draw));
 
         firstDraw = false;
@@ -225,6 +229,26 @@ public class NetworkClient {
     }
 
     /**
+     * Sends a score of clients to the server
+     */
+    public void sendScore(int score) {
+
+        if(!clientRunning) {
+            throw new IllegalStateException("Attempting to send score without a running client");
+        }
+
+        if(clientColor == null) {
+            throw new IllegalStateException("Attempting to send score without registering a color");
+        }
+        if(currentCanvasID == -1) {
+            throw new IllegalStateException("Attempting to own send score without registering a canvas");
+        }
+        String stringScore = Integer.toString(score);
+        System.out.println(clientColor + " "  + stringScore);
+        output.println(NetworkMessage.addScoresRequestHeader(stringScore, clientColor, currentCanvasID));
+    }
+
+    /**
      * An implementation of the NetworkObserver interface.
      * Handles receiving information from the server.
      */
@@ -267,18 +291,27 @@ public class NetworkClient {
                         serverResponseBoolSync.notify();
                     }
                     break;
+                case NetworkMessage.CALCULATE_SCORE:
+                    String winnerMsg = data.split("/")[0];
+                    String stringColor = data.split("/")[1];
+                    String winnerScore = data.split("/")[2];
+                    Color winnerColor = Color.valueOf(stringColor);
+                    int score = Integer.parseInt(winnerScore);
+                    System.out.println( stringColor + " " + winnerMsg + " with score " + winnerScore);
+                    DrawInfo result = new DrawInfo(0, 0, 0, winnerColor, false, false, false, true, score, winnerMsg);
+                    drawInfoQueue.add(result);
+                    break;
                 case NetworkMessage.CANVAS_LOCK:
                     break;
                 case NetworkMessage.CANVAS_CLEAR:
-                    DrawInfo clear = new DrawInfo(0, 0, Integer.parseInt(data), Color.TRANSPARENT, false, true, false);
+                    DrawInfo clear = new DrawInfo(0, 0, Integer.parseInt(data), Color.TRANSPARENT, false, true, false, false, 0, "");
                     drawInfoQueue.add(clear);
                     break;
                 case NetworkMessage.CANVAS_OWN:
                     String[] msg = data.split("/", 2);
                     Color color = Color.valueOf(msg[1]);
-                    DrawInfo own = new DrawInfo(0, 0, Integer.parseInt(msg[0]), color, false, false, true);
+                    DrawInfo own = new DrawInfo(0, 0, Integer.parseInt(msg[0]), color, false, false, true, false,0, "");
                     drawInfoQueue.add(own);
-
                     break;
                 default:
                     throw new IllegalArgumentException("Received invalid network message");

@@ -2,10 +2,13 @@ package networking.server;
 
 import com.example.javafxtest.DrawInfo;
 import javafx.scene.paint.Color;
+import javafx.util.Pair;
 import networking.NetworkMessage;
 
 import java.io.*;
 import java.net.*;
+import java.util.HashMap;
+import java.util.Map;
 
 @SuppressWarnings("SynchronizeOnNonFinalField") // To disable warning about synchronizing on output
 /**
@@ -97,6 +100,9 @@ public class ClientThread extends Thread {
 				break;
 			case NetworkMessage.CANVAS_OWN:
 				processCanvasOwnMessage(data);
+				break;
+			case NetworkMessage.CALCULATE_SCORE:
+				processCalculateScoreRequest(data);
 				break;
 			default:
 				// TODO: Don't throw exception on server, instead sent some error to client
@@ -195,6 +201,7 @@ public class ClientThread extends Thread {
 
 	private void processLockMessage(String data) {
 		int canvasID = Integer.parseInt(data);
+		System.out.println("Server got canvasID" + canvasID);
 		server.lockCanvasByID(canvasID);
 	}
 
@@ -216,4 +223,39 @@ public class ClientThread extends Thread {
 			}
 		}
 	}
+
+	private void processCalculateScoreRequest(String data) {
+		String StringScore= data.split("/")[0];
+		String stringColor = data.split("/")[1];
+		String StringCanvasId = data.split("/")[2];
+
+		Color color = Color.valueOf(stringColor);
+		int score = Integer.parseInt(StringScore);
+		int canvasId = Integer.parseInt(StringCanvasId);
+		boolean allCanvasColoured = server.storeScore(score, color, canvasId);
+
+		//if every canvas is coloured then check winner
+		if(allCanvasColoured == true){
+			processCheckResults();
+		}
+	}
+
+	//passing the information to clients after checking results i.e. if player won a game or there is a tie
+	private void processCheckResults(){
+		Map<Color, Integer> result = server.checkWinner();
+
+		for (PrintWriter out : server.clientOutputs) {
+			if(result.size() == 1){
+					for ( Map.Entry<Color, Integer> entry : result.entrySet()) {
+			        out.println(NetworkMessage.addScoresRequestHeader("Game Winner", entry.getKey(),entry.getValue()));
+		            }
+			}
+			else{
+				for ( Map.Entry<Color, Integer> entry : result.entrySet()) {
+					out.println(NetworkMessage.addScoresRequestHeader("Game ended with a Tie", entry.getKey(), entry.getValue()));
+				}
+				}
+		}
+	}
 }
+

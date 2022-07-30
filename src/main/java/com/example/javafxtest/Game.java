@@ -3,34 +3,45 @@ package com.example.javafxtest;
 import javafx.animation.AnimationTimer;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Label;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import networking.client.NetworkClient;
 
 public class Game {
     private Canvas[] canvases;
     private NetworkClient networkClient;
+
+    private Label scores;
+    private Label yourColor;
+
+    private Rectangle clientColorRect;
+    int score = 0;
+
     Game(Stage primaryStage, NetworkClient client) {
-        canvases = new Canvas[64];
+        canvases = new Canvas[8];
 
         this.networkClient = client;
         GridPane grid = new GridPane();
 
-        for(int j=0; j<64; j++){
-            Canvas canvas = new Canvas(100, 100);
+        for(int j=0; j<8; j++){
+            Canvas canvas = new Canvas(70, 70);
             canvases[j] = canvas;
             canvas.setId(Integer.toString(j));
         }
         int count = 0;
-        for (int i= 0; i< 8 ; i++){
-            for (int j= 0; j< 8 ; j++){
+        for (int i= 0; i< 4 ; i++){
+            for (int j= 0; j< 2; j++){
                 // Put the canvases inside a StackPane and give the StackPane a border
                 StackPane pane = new StackPane(canvases[count]);
                 pane.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
@@ -47,9 +58,32 @@ public class Game {
 
         grid.setPadding(new Insets(10,10,10,10));
 
+        yourColor= new Label( "Your Color: " );
+        yourColor.setFont(new Font("Arial", 20));
+        yourColor.setStyle("-fx-font-weight: bold");
+        clientColorRect = new Rectangle();
+        //set the width
+        clientColorRect.setWidth(30);
+        //set height
+        clientColorRect.setHeight(30);
+        clientColorRect.setFill(networkClient.clientColor);
 
-        StackPane root = new StackPane();
-        root.getChildren().add(grid);
+        scores = new Label( "Score Rules: You will get 10 points for each coloured Box" );
+        scores.setFont(new Font("Arial", 20));
+        scores.setAlignment(Pos.CENTER);
+        scores.setStyle("-fx-background-color: grey; -fx-font-weight: bold ");
+        GridPane root = new GridPane();
+        root.setPadding(new Insets(10,10,10,10));
+        root.setHgap(10);
+        root.setVgap(10);
+
+        GridPane.setConstraints(yourColor, 0,0);
+        GridPane.setConstraints(clientColorRect, 0,0);
+        GridPane.setConstraints(scores, 0, 1);
+        GridPane.setConstraints(grid, 0, 2);
+
+        GridPane.setMargin(clientColorRect, new Insets(5,5,5,135));
+        root.getChildren().addAll(yourColor,clientColorRect, scores, grid);
         Scene scene = new Scene(root, grid.getPrefWidth(), grid.getPrefHeight());
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -111,7 +145,12 @@ public class Game {
                             networkClient.sendLockCanvasRequest();
                             graphicsContext.setFill(networkClient.clientColor);
                             graphicsContext.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+                            score+= 10; //incrementing score
+                            System.out.println(score);
+                            scores.setText("Your Score:   " + score);//displaying score on clients' canvas
                             networkClient.sendOwnCanvas();
+                            networkClient.sendScore(score); // sending scores
+
                         }
                         else {
                             // CLEAR CANVAS
@@ -151,6 +190,16 @@ public class Game {
                         drawContext.moveTo(info.getX(), info.getY());
                         drawContext.stroke();
                     }
+                    else if(info.isGameOver()){
+                        if(info.getResultMsg().equals("Game ended with a Tie")) {
+                            yourColor.setText(info.getResultMsg());
+                            scores.setText("Tie Score " + info.getWinnerScore());
+                        }else{
+                            yourColor.setText(info.getResultMsg());
+                            clientColorRect.setFill(info.getColor());
+                            scores.setText("Winner Score " + info.getWinnerScore());
+                        }
+                    }
                     else {
                         drawContext.lineTo(info.getX(), info.getY());
                         drawContext.stroke();
@@ -170,7 +219,6 @@ public class Game {
 
         // obtains PixelReader from the snap
         PixelReader pixelReader = image.getPixelReader();
-
 
         double snapHeight = image.getHeight();
         double snapWidth = image.getWidth();
