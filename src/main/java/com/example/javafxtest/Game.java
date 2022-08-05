@@ -185,7 +185,7 @@ public class Game {
                 Color color = pixelReader.getColor(readX, readY);
 
                 // checks if a pixel is colored with PenColor
-                if (color.toString().equals(hexColor)) {
+                if (color.getRed() < 1 || color.getGreen() < 1 || color.getBlue() < 1) {
                     coloredPixels += 1;
                 }
             }
