@@ -150,18 +150,23 @@ public class LaunchScreenController {
 
     @FXML
     private void registerColorButtonClicked(MouseEvent e) {
-        boolean success = networkClient.registerColor((Color)selectedColorCanvas.getGraphicsContext2D().getFill());
-        if(success) {
-            colorMessage.setFill(Color.BLACK);
-            colorMessage.setText("Colour Registered     "); // Extra spaces prevent UI from moving when text changes
-            startGameButton.setDisable(false);
-        }
-        else {
-            colorMessage.setFill(Color.RED);
-            colorMessage.setText("Colour already in use");
-        }
+        if (!selectedColorCanvas.getGraphicsContext2D().getFill().toString().equals("0x000000ff")) {
+            boolean success = networkClient.registerColor((Color) selectedColorCanvas.getGraphicsContext2D().getFill());
+            if (success) {
+                colorMessage.setFill(Color.BLACK);
+                colorMessage.setText("Colour Registered     "); // Extra spaces prevent UI from moving when text changes
+                startGameButton.setDisable(false);
+            } else {
+                colorMessage.setFill(Color.RED);
+                colorMessage.setText("Colour already in use");
+            }
 
-        colorMessage.setVisible(true);
+            colorMessage.setVisible(true);
+        } else {
+            colorMessage.setFill(Color.RED);
+            colorMessage.setText("Choose a colour");
+            colorMessage.setVisible(true);
+        }
     }
 
     @FXML
