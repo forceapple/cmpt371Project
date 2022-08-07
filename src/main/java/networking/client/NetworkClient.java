@@ -166,7 +166,7 @@ public class NetworkClient {
             throw new IllegalStateException("Attempting to draw without registering a canvas");
         }
 
-        DrawInfo draw = new DrawInfo(x, y, currentCanvasID, clientColor, firstDraw, false, false);
+        DrawInfo draw = new DrawInfo(x, y, currentCanvasID, clientColor, firstDraw, false, false, false);
         output.println(NetworkMessage.generateDrawMessage(draw));
 
         firstDraw = false;
@@ -224,6 +224,22 @@ public class NetworkClient {
         output.println(NetworkMessage.addCanvasOwnRequestHeader(stringCanvasID, clientColor));
     }
 
+    public void sendJoinGame() {
+
+        if(!clientRunning) {
+            throw new IllegalStateException("Attempting to clear canvas without a running client");
+        }
+
+        if(clientColor == null) {
+            throw new IllegalStateException("Attempting to clear canvas without registering a color");
+        }
+        if(currentCanvasID == -1) {
+            throw new IllegalStateException("Attempting to clear canvas without registering a canvas");
+        }
+        String stringCanvasID = Integer.toString(currentCanvasID);
+        output.println(NetworkMessage.addJoinHeader(stringCanvasID));
+    }
+
     /**
      * An implementation of the NetworkObserver interface.
      * Handles receiving information from the server.
@@ -259,7 +275,7 @@ public class NetworkClient {
                     drawInfoQueue.add(DrawInfo.fromJson(data));
                     break;
 
-                    // Both cases result in the same code
+                // Both cases result in the same code
                 case NetworkMessage.CANVAS_REQUEST_HEADER:
                 case NetworkMessage.COLOR_REQUEST_HEADER:
                     synchronized (serverResponseBoolSync) {
@@ -270,16 +286,20 @@ public class NetworkClient {
                 case NetworkMessage.CANVAS_LOCK:
                     break;
                 case NetworkMessage.CANVAS_CLEAR:
-                    DrawInfo clear = new DrawInfo(0, 0, Integer.parseInt(data), Color.TRANSPARENT, false, true, false);
+                    DrawInfo clear = new DrawInfo(0, 0, Integer.parseInt(data), Color.TRANSPARENT, false, true, false, false);
                     drawInfoQueue.add(clear);
                     break;
                 case NetworkMessage.CANVAS_OWN:
                     String[] msg = data.split("/", 2);
                     Color color = Color.valueOf(msg[1]);
-                    DrawInfo own = new DrawInfo(0, 0, Integer.parseInt(msg[0]), color, false, false, true);
+                    DrawInfo own = new DrawInfo(0, 0, Integer.parseInt(msg[0]), color, false, false, true, false);
                     drawInfoQueue.add(own);
-
                     break;
+                case NetworkMessage.GAME_JOIN:
+                    DrawInfo join = new DrawInfo(0, 0, Integer.parseInt(data), Color.TRANSPARENT, false, true, false, true );
+                    drawInfoQueue.add(join);
+                    break;
+
                 default:
                     throw new IllegalArgumentException("Received invalid network message");
             }
