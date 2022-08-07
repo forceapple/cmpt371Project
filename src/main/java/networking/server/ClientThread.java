@@ -23,7 +23,7 @@ public class ClientThread extends Thread {
 		this.socket = socket;
 		server = ServerData.getInstance();
 	}
-	
+
 	public void run() {
 		System.out.println("Client Thread Starting");
 		try {
@@ -97,6 +97,9 @@ public class ClientThread extends Thread {
 				break;
 			case NetworkMessage.CANVAS_OWN:
 				processCanvasOwnMessage(data);
+				break;
+			case NetworkMessage.GAME_JOIN:
+				processJoinGameMessage(data);
 				break;
 			default:
 				// TODO: Don't throw exception on server, instead sent some error to client
@@ -213,6 +216,14 @@ public class ClientThread extends Thread {
 			Color color = Color.valueOf(stringColor);
 			for (PrintWriter out : server.clientOutputs) {
 				out.println(NetworkMessage.addCanvasOwnRequestHeader(id, color));
+			}
+		}
+	}
+
+	private void processJoinGameMessage(String data) {
+		synchronized (server.clientOutputs) {
+			for (PrintWriter out : server.clientOutputs) {
+				out.println(NetworkMessage.addJoinHeader(data));
 			}
 		}
 	}

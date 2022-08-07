@@ -25,7 +25,9 @@ public class DrawInfo {
 
     private final boolean ownCanvas;
 
-    public DrawInfo(double x, double y, int canvasID, Color color, boolean pathStart, boolean clearCanvas, boolean ownCanvas) {
+    private final boolean gameJoin;
+
+    public DrawInfo(double x, double y, int canvasID, Color color, boolean pathStart, boolean clearCanvas, boolean ownCanvas, boolean gameJoin) {
         this.x = x;
         this.y = y;
         this.canvasID = canvasID;
@@ -33,6 +35,7 @@ public class DrawInfo {
         this.pathStart = pathStart;
         this.clearCanvas = clearCanvas;
         this.ownCanvas = ownCanvas;
+        this.gameJoin = false;
     }
 
     public double getX() {
@@ -58,6 +61,9 @@ public class DrawInfo {
     }
     public boolean isOwnCanvas() {
         return ownCanvas;
+    }
+    public boolean isGameJoin() {
+        return gameJoin;
     }
     public String toJson() {
         return toJson(this);
@@ -130,6 +136,7 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
         boolean pathStart = false;
         boolean clearCanvas = false;
         boolean ownCanvas = false;
+        boolean join = false;
 
         jsonReader.beginObject();
 
@@ -171,12 +178,15 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
             if (propertyName.equals("ownCanvas")) {
                 ownCanvas = jsonReader.nextBoolean();
             }
+            if (propertyName.equals("join")) {
+                join = jsonReader.nextBoolean();
+            }
         }
 
         jsonReader.endObject();
 
         color = new Color(colorRed, colorGreen, colorBlue, colorOpacity);
-        return new DrawInfo(x, y, canvasID, color, pathStart, clearCanvas, ownCanvas);
+        return new DrawInfo(x, y, canvasID, color, pathStart, clearCanvas, ownCanvas, join);
     }
 }
 
