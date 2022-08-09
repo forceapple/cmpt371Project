@@ -98,6 +98,9 @@ public class ClientThread extends Thread {
 			case NetworkMessage.CANVAS_OWN:
 				processCanvasOwnMessage(data);
 				break;
+			case NetworkMessage.JOIN_GAME:
+				processJoinGameMessage(data);
+				break;
 			default:
 				// TODO: Don't throw exception on server, instead sent some error to client
 				throw new IllegalArgumentException("Invalid Message being sent over network");
@@ -213,6 +216,22 @@ public class ClientThread extends Thread {
 			Color color = Color.valueOf(stringColor);
 			for (PrintWriter out : server.clientOutputs) {
 				out.println(NetworkMessage.addCanvasOwnRequestHeader(id, color));
+			}
+		}
+	}
+
+	private void processJoinGameMessage(String data) {
+		Color playerColor = Color.valueOf(data);
+		synchronized (server.clientOutputs) {
+			for(PrintWriter out : server.clientOutputs) {
+				// A lock MUST be acquired on the PrintWriters to ensure that two threads do not send messages at the exact same time
+				// Disable the warning. Although the compiler thinks out is a local variable it actually isn't
+				//noinspection SynchronizationOnLocalVariableOrMethodParameter
+				synchronized(out) {
+					if(!out.equals(output)) {
+						out.println(NetworkMessage.addJoinGameHeader(playerColor));
+					}
+				}
 			}
 		}
 	}

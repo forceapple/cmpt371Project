@@ -64,6 +64,8 @@ public class NetworkMessage {
     public static final String CANVAS_CLEAR = "CANVAS_CLEAR";
     public static final String CANVAS_OWN = "CANVAS_OWN";
 
+    public static final String JOIN_GAME = "JOIN_GAME";
+
     public static String addDrawMessageHeader(String msg) {
         return DRAW_MESSAGE_HEADER + "-" + msg;
     }
@@ -81,6 +83,9 @@ public class NetworkMessage {
     public static String addCanvasClearRequestHeader(String msg) {return CANVAS_CLEAR + "-" + msg; }
     public static String addCanvasOwnRequestHeader(String msg, Color ownedColor) {return CANVAS_OWN + "-" + msg + "/" + ownedColor; }
 
+    public static String addJoinGameHeader(Color msg) {
+        return JOIN_GAME + "-" + msg;
+    }
     /**
      * Generates a message indicating to the server to release the currently owned canvas
      * @return The string encoding of the message

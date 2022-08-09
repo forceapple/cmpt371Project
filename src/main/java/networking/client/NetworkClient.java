@@ -26,6 +26,8 @@ public class NetworkClient {
     public Color clientColor = null;
     public final InputHandler networkInputs;
 
+    public final InputHandler lobbyInputs;
+
     public int currentCanvasID;
 
     // serverResponseBoolSync is only used as a synchronization lock for serverResponseBool
@@ -41,7 +43,9 @@ public class NetworkClient {
     public NetworkClient(String host, String port) throws IOException, IllegalArgumentException {
         observers = new ArrayList<>();
         networkInputs = new InputHandler();
+        lobbyInputs = new InputHandler();
         addObserver(networkInputs);
+        addObserver(lobbyInputs);
         serverResponseBoolSync = false;
         serverResponseBool = false;
         currentCanvasID = -1;
@@ -224,6 +228,9 @@ public class NetworkClient {
         output.println(NetworkMessage.addCanvasOwnRequestHeader(stringCanvasID, clientColor));
     }
 
+    public void sendJoinGame() {
+        output.println(NetworkMessage.addJoinGameHeader(clientColor));
+    }
     /**
      * An implementation of the NetworkObserver interface.
      * Handles receiving information from the server.
@@ -231,9 +238,11 @@ public class NetworkClient {
     public class InputHandler implements NetworkObserver {
         // This queue contains all the DrawInfo objects received from the server
         private final ConcurrentLinkedQueue<DrawInfo> drawInfoQueue;
+        private final ConcurrentLinkedQueue<Color> lobbyQueue;
 
         private InputHandler() {
             drawInfoQueue = new ConcurrentLinkedQueue<>();
+            lobbyQueue = new ConcurrentLinkedQueue<>();
         }
 
         public boolean areInputsAvailable() {
@@ -244,6 +253,15 @@ public class NetworkClient {
             return drawInfoQueue.poll();
         }
 
+
+
+        public boolean areInputsLobbyAvailable() {
+            return !lobbyQueue.isEmpty();
+        }
+
+        public Color getNextPlayerInput() {
+            return lobbyQueue.poll();
+        }
         /**
          * This function is called everytime the client receives any message from the server.
          * Note: This function runs in the ClientNetworkThread
@@ -279,6 +297,10 @@ public class NetworkClient {
                     DrawInfo own = new DrawInfo(0, 0, Integer.parseInt(msg[0]), color, false, false, true);
                     drawInfoQueue.add(own);
 
+                    break;
+                case NetworkMessage.JOIN_GAME:
+                    Color playerColor = Color.valueOf(data);
+                    lobbyQueue.add(playerColor);
                     break;
                 default:
                     throw new IllegalArgumentException("Received invalid network message");

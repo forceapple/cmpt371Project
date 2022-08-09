@@ -168,8 +168,7 @@ public class LaunchScreenController {
     private void startGameButtonClicked(MouseEvent e) {
         networkClient.startClient();
         Stage stage = new Stage();
-        Game game = new Game(stage, networkClient);
-        ((Stage)((Node)e.getSource()).getScene().getWindow()).close(); // Get the stage and close it
+        Lobby lobby = new Lobby(stage, networkClient);
     }
 
     private void displayCustomColor() {
