@@ -1,10 +1,9 @@
 package networking.client;
 
 import com.example.javafxtest.DrawInfo;
-import com.example.javafxtest.LaunchScreenController;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
+import com.example.javafxtest.Game;
+import com.example.javafxtest.GameResults;
+import javafx.application.Platform;
 import javafx.scene.paint.Color;
 import networking.NetworkMessage;
 
@@ -170,7 +169,7 @@ public class NetworkClient {
             throw new IllegalStateException("Attempting to draw without registering a canvas");
         }
 
-        DrawInfo draw = new DrawInfo(x, y, currentCanvasID, clientColor, firstDraw, false, false, false, 0, "");
+        DrawInfo draw = new DrawInfo(x, y, currentCanvasID, clientColor, firstDraw, false, false);
         output.println(NetworkMessage.generateDrawMessage(draw));
 
         firstDraw = false;
@@ -240,12 +239,9 @@ public class NetworkClient {
         if(clientColor == null) {
             throw new IllegalStateException("Attempting to send score without registering a color");
         }
-        if(currentCanvasID == -1) {
-            throw new IllegalStateException("Attempting to own send score without registering a canvas");
-        }
+
         String stringScore = Integer.toString(score);
-        System.out.println(clientColor + " "  + stringScore);
-        output.println(NetworkMessage.addScoresRequestHeader(stringScore, clientColor, currentCanvasID));
+        output.println(NetworkMessage.generateScoresAndGameResults(stringScore, clientColor, 0));
     }
 
     /**
@@ -256,8 +252,11 @@ public class NetworkClient {
         // This queue contains all the DrawInfo objects received from the server
         private final ConcurrentLinkedQueue<DrawInfo> drawInfoQueue;
 
+        private final ConcurrentLinkedQueue<GameResults> gameResults;
+
         private InputHandler() {
             drawInfoQueue = new ConcurrentLinkedQueue<>();
+            gameResults = new ConcurrentLinkedQueue<>();
         }
 
         public boolean areInputsAvailable() {
@@ -267,6 +266,15 @@ public class NetworkClient {
         public DrawInfo getNextInput() {
             return drawInfoQueue.poll();
         }
+
+        public boolean isGameOver() {
+            return !gameResults.isEmpty();
+        }
+        public GameResults getGameResults(){
+            return gameResults.poll();
+        }
+
+
 
         /**
          * This function is called everytime the client receives any message from the server.
@@ -291,26 +299,30 @@ public class NetworkClient {
                         serverResponseBoolSync.notify();
                     }
                     break;
-                case NetworkMessage.CALCULATE_SCORE:
+                case NetworkMessage.CALCULATE_SCORE_AND_GET_RESULTS:
                     String winnerMsg = data.split("/")[0];
                     String stringColor = data.split("/")[1];
                     String winnerScore = data.split("/")[2];
                     Color winnerColor = Color.valueOf(stringColor);
                     int score = Integer.parseInt(winnerScore);
-                    System.out.println( stringColor + " " + winnerMsg + " with score " + winnerScore);
-                    DrawInfo result = new DrawInfo(0, 0, 0, winnerColor, false, false, false, true, score, winnerMsg);
-                    drawInfoQueue.add(result);
+                    GameResults results = new GameResults(true, score, winnerMsg, winnerColor);
+                    gameResults.add(results);
+                    Game.GameEndResults endResults = new Game.GameEndResults();
+                    Platform.runLater(() -> {
+                        endResults.run();
+                    });
+
                     break;
                 case NetworkMessage.CANVAS_LOCK:
                     break;
                 case NetworkMessage.CANVAS_CLEAR:
-                    DrawInfo clear = new DrawInfo(0, 0, Integer.parseInt(data), Color.TRANSPARENT, false, true, false, false, 0, "");
+                    DrawInfo clear = new DrawInfo(0, 0, Integer.parseInt(data), Color.TRANSPARENT, false, true, false);
                     drawInfoQueue.add(clear);
                     break;
                 case NetworkMessage.CANVAS_OWN:
                     String[] msg = data.split("/", 2);
                     Color color = Color.valueOf(msg[1]);
-                    DrawInfo own = new DrawInfo(0, 0, Integer.parseInt(msg[0]), color, false, false, true, false,0, "");
+                    DrawInfo own = new DrawInfo(0, 0, Integer.parseInt(msg[0]), color, false, false, true);
                     drawInfoQueue.add(own);
                     break;
                 default:

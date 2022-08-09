@@ -1,8 +1,6 @@
 package networking.server;
 
 import javafx.scene.paint.Color;
-import javafx.util.Pair;
-import networking.NetworkMessage;
 
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -38,7 +36,6 @@ class ServerData {
 	public final Map<Color, Integer> clientScores;
 	public Boolean[] isLocked;
 
-	public Boolean[] isColoured;
 
 	public static ServerData getInstance() {
 		if(instance == null) {
@@ -59,12 +56,6 @@ class ServerData {
 
 		for(int i=0; i<8; i++){
 			isLocked[i] = false;
-		}
-
-		//marking every canvas as not coloured
-		isColoured = new Boolean[8];
-		for(int i=0; i<8; i++){
-			isColoured[i] = false;
 		}
 
 	}
@@ -96,20 +87,19 @@ class ServerData {
 		}
 	}
 
-	public boolean storeScore(int score, Color color, int canvasID){
-         clientScores.put(color, score);
-		 System.out.println(clientScores);
+	/*
+	once a client earn a score, this method is called and in this method hashmap clientScores have a key as
+	client colour and value as client score and once all canvases are locked i.e. they are coloured then a boolean
+	is returned which determines the end of the game
+	 */
+	public boolean storeScore(int score, Color color){
 
-		synchronized(isColoured) {
-			this.isColoured[canvasID] = true;
-		}
+         clientScores.put(color, score);
 
 		//checking if all canvases are coloured
 		boolean allTrue = true;
-		for (boolean i : isColoured)
-		{
-			if (!i)
-			{
+		for (boolean i : isLocked) {
+			if (!i) {
 				allTrue = false;
 				break;
 			}
@@ -118,12 +108,13 @@ class ServerData {
 	}
 
 	//checking if a player won a game or if there is a tie
-	public Map<Color, Integer> checkWinner(){
-		int highestScores =(Collections.max(clientScores.values()));// This will return highest Scores
+	public Map<Color, Integer> checkResult(){
+		int highestScore = Collections.max(clientScores.values());// This will return highest Score
+
 		Map <Color, Integer> winners = new HashMap<>();
 
 		for (Map.Entry<Color, Integer> entry : clientScores.entrySet()) {  // Iterate through hashmap
-			if (entry.getValue()== highestScores) {
+			if (entry.getValue() == highestScore) {
 				winners.put(entry.getKey(), entry.getValue());
 			}
 		}

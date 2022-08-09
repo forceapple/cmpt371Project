@@ -54,6 +54,18 @@ public class NetworkMessage {
      *                 Uses CANVAS_CLEAR + .toString of an int indicating which canvas id to clear. Currently, it
      *                 relays which canvas to clear to all clients.
      *
+     *      Calculate Score and Results message:
+     *           Sending Request to Server:
+     *                 Uses SCORE + .toString of an int indicating score of player + color indicating client Color +
+     *                 int indicating which canvas id is coloured by player
+     *                 and sends it to the server
+     *
+     *          Server Responses:
+     *                 Uses SCORE + string message displaying if a player won a game or it is a tie + color indicating
+     *                 which player won the game + int score indicating the score of the winner and sends it to all
+     *                 clients.
+     *
+     *
      *
      */
     public static final String DRAW_MESSAGE_HEADER = "DRAW";
@@ -64,7 +76,7 @@ public class NetworkMessage {
     public static final String CANVAS_CLEAR = "CANVAS_CLEAR";
     public static final String CANVAS_OWN = "CANVAS_OWN";
 
-    public static final String CALCULATE_SCORE = "CALCULATE_SCORE";
+    public static final String CALCULATE_SCORE_AND_GET_RESULTS = "SCORE_AND_RESULTS";
 
     public static String addDrawMessageHeader(String msg) {
         return DRAW_MESSAGE_HEADER + "-" + msg;
@@ -83,7 +95,11 @@ public class NetworkMessage {
     public static String addCanvasClearRequestHeader(String msg) {return CANVAS_CLEAR + "-" + msg; }
     public static String addCanvasOwnRequestHeader(String msg, Color ownedColor) {return CANVAS_OWN + "-" + msg + "/" + ownedColor; }
 
-    public static String addScoresRequestHeader(String msg, Color clientColour, int canvasID){return CALCULATE_SCORE + "-" + msg + "/" + clientColour + "/" + canvasID; }
+    /**
+     * Generates a message indicating to the server the score of the client and client's color
+     * @return The end results of the game
+     */
+    public static String generateScoresAndGameResults (String msg, Color clientColour, int endScore){return CALCULATE_SCORE_AND_GET_RESULTS + "-" + msg + "/" + clientColour + "/" + endScore; }
 
     /**
      * Generates a message indicating to the server to release the currently owned canvas

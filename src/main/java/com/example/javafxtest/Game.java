@@ -20,13 +20,13 @@ import networking.client.NetworkClient;
 
 public class Game {
     private Canvas[] canvases;
-    private NetworkClient networkClient;
+    private static NetworkClient networkClient;
 
-    private Label scores;
-    private Label yourColor;
+    private static Label scoresLabel;
+    private static Label playerColorLabel;
 
-    private Rectangle clientColorRect;
-    int score = 0;
+    private static Rectangle clientColorRect;
+    private int score = 0;
 
     Game(Stage primaryStage, NetworkClient client) {
         canvases = new Canvas[8];
@@ -58,38 +58,40 @@ public class Game {
 
         grid.setPadding(new Insets(10,10,10,10));
 
-        yourColor= new Label( "Your Color: " );
-        yourColor.setFont(new Font("Arial", 20));
-        yourColor.setStyle("-fx-font-weight: bold");
+        playerColorLabel = new Label( "Your Color: " );
+        playerColorLabel.setFont(new Font("Arial", 20));
+        playerColorLabel.setStyle("-fx-font-weight: bold");
         clientColorRect = new Rectangle();
-        //set the width
         clientColorRect.setWidth(30);
-        //set height
         clientColorRect.setHeight(30);
         clientColorRect.setFill(networkClient.clientColor);
 
-        scores = new Label( "Score Rules: You will get 10 points for each coloured Box" );
-        scores.setFont(new Font("Arial", 20));
-        scores.setAlignment(Pos.CENTER);
-        scores.setStyle("-fx-background-color: grey; -fx-font-weight: bold ");
+        scoresLabel = new Label( "Score Rules: You will get 10 points for each coloured Box" );
+        scoresLabel.setFont(new Font("Arial", 20));
+        scoresLabel.setAlignment(Pos.CENTER);
+        scoresLabel.setStyle("-fx-background-color: grey; -fx-font-weight: bold ");
         GridPane root = new GridPane();
         root.setPadding(new Insets(10,10,10,10));
         root.setHgap(10);
         root.setVgap(10);
 
-        GridPane.setConstraints(yourColor, 0,0);
+        GridPane.setConstraints(playerColorLabel, 0,0);
         GridPane.setConstraints(clientColorRect, 0,0);
-        GridPane.setConstraints(scores, 0, 1);
+        GridPane.setConstraints(scoresLabel, 0, 1);
         GridPane.setConstraints(grid, 0, 2);
 
         GridPane.setMargin(clientColorRect, new Insets(5,5,5,135));
-        root.getChildren().addAll(yourColor,clientColorRect, scores, grid);
+        root.getChildren().addAll(playerColorLabel,clientColorRect, scoresLabel, grid);
         Scene scene = new Scene(root, grid.getPrefWidth(), grid.getPrefHeight());
         primaryStage.setScene(scene);
         primaryStage.show();
 
         AnimationTimer animationTimer = getAnimationTimer();
         animationTimer.start();
+
+
+
+
     }
 
 
@@ -145,12 +147,10 @@ public class Game {
                             networkClient.sendLockCanvasRequest();
                             graphicsContext.setFill(networkClient.clientColor);
                             graphicsContext.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
-                            score+= 10; //incrementing score
-                            System.out.println(score);
-                            scores.setText("Your Score:   " + score);//displaying score on clients' canvas
+                            score += 10;
+                            scoresLabel.setText("Your Score:   " + score);//displaying score on clients' canvas
                             networkClient.sendOwnCanvas();
                             networkClient.sendScore(score); // sending scores
-
                         }
                         else {
                             // CLEAR CANVAS
@@ -190,16 +190,7 @@ public class Game {
                         drawContext.moveTo(info.getX(), info.getY());
                         drawContext.stroke();
                     }
-                    else if(info.isGameOver()){
-                        if(info.getResultMsg().equals("Game ended with a Tie")) {
-                            yourColor.setText(info.getResultMsg());
-                            scores.setText("Tie Score " + info.getWinnerScore());
-                        }else{
-                            yourColor.setText(info.getResultMsg());
-                            clientColorRect.setFill(info.getColor());
-                            scores.setText("Winner Score " + info.getWinnerScore());
-                        }
-                    }
+
                     else {
                         drawContext.lineTo(info.getX(), info.getY());
                         drawContext.stroke();
@@ -242,6 +233,28 @@ public class Game {
         // computes colored area percentage
         double fillPercentage = (coloredPixels / totalPixels) * 100.0;
         return fillPercentage;
+    }
+
+
+    //this method runs only when the game ends, and it updates the UI
+    public static class GameEndResults implements Runnable{
+        @Override
+        public void run() {
+            while(networkClient.networkInputs.isGameOver()){
+                GameResults gameResults = networkClient.networkInputs.getGameResults();
+                if (gameResults.isGameOver()) {
+                    if (gameResults.getResultMsg().equals("Game ended with a Tie")) {
+                        playerColorLabel.setText(gameResults.getResultMsg());
+                        clientColorRect.setFill(Color.TRANSPARENT);
+                        scoresLabel.setText("Tie Score " + gameResults.getWinnerScore());
+                    } else {
+                        playerColorLabel.setText(gameResults.getResultMsg());
+                        clientColorRect.setFill(gameResults.getWinnerColor());
+                        scoresLabel.setText("Winner Score " + gameResults.getWinnerScore());
+                    }
+                }
+            }
+        }
     }
 
 }

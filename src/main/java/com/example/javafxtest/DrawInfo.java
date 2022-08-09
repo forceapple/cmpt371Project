@@ -25,13 +25,8 @@ public class DrawInfo {
 
     private final boolean ownCanvas;
 
-    private final boolean isGameOver;
 
-    private final int winnerScore;
-
-    private final String gameResultMsg;
-
-    public DrawInfo(double x, double y, int canvasID, Color color, boolean pathStart, boolean clearCanvas, boolean ownCanvas, boolean isGameOver, int winnerScore, String gameResultMsg) {
+    public DrawInfo(double x, double y, int canvasID, Color color, boolean pathStart, boolean clearCanvas, boolean ownCanvas) {
         this.x = x;
         this.y = y;
         this.canvasID = canvasID;
@@ -39,9 +34,6 @@ public class DrawInfo {
         this.pathStart = pathStart;
         this.clearCanvas = clearCanvas;
         this.ownCanvas = ownCanvas;
-        this.isGameOver = isGameOver;
-        this.winnerScore = winnerScore;
-        this.gameResultMsg = gameResultMsg;
     }
 
     public double getX() {
@@ -69,23 +61,9 @@ public class DrawInfo {
         return ownCanvas;
     }
 
-    public int getWinnerScore() {
-        return winnerScore;
-    }
-
-    public String getResultMsg() {
-        return gameResultMsg;
-    }
-
-    public boolean isGameOver() {
-        return isGameOver;
-    }
-
     public String toJson() {
         return toJson(this);
     }
-
-
 
 
     public static String toJson(DrawInfo drawInfo) {
@@ -140,15 +118,6 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
         jsonWriter.name("ownCanvas");
         jsonWriter.value(drawInfo.isOwnCanvas());
 
-        jsonWriter.name("isGameOver");
-        jsonWriter.value(drawInfo.isGameOver());
-
-        jsonWriter.name("winnerScore");
-        jsonWriter.value(drawInfo.getWinnerScore());
-
-        jsonWriter.name("gameResultMsg");
-        jsonWriter.value(drawInfo.getResultMsg());
-
         jsonWriter.endObject();
     }
 
@@ -165,9 +134,6 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
         boolean pathStart = false;
         boolean clearCanvas = false;
         boolean ownCanvas = false;
-        boolean isGameOver = false;
-        int winnerScore = 0;
-        String gameResultMsg = "";
 
         jsonReader.beginObject();
 
@@ -210,21 +176,12 @@ class DrawInfoAdapter extends TypeAdapter<DrawInfo> {
             if (propertyName.equals("ownCanvas")) {
                 ownCanvas = jsonReader.nextBoolean();
             }
-            if (propertyName.equals("isGameOver")) {
-                isGameOver = jsonReader.nextBoolean();
-            }
-            if (propertyName.equals("winnerScore")) {
-                winnerScore = jsonReader.nextInt();
-            }
-            if (propertyName.equals("gameResultMsg")) {
-                gameResultMsg = jsonReader.nextString();
-            }
         }
 
         jsonReader.endObject();
 
         color = new Color(colorRed, colorGreen, colorBlue, colorOpacity);
-        return new DrawInfo(x, y, canvasID, color, pathStart, clearCanvas, ownCanvas, isGameOver, winnerScore, gameResultMsg);
+        return new DrawInfo(x, y, canvasID, color, pathStart, clearCanvas, ownCanvas);
     }
 }
 
