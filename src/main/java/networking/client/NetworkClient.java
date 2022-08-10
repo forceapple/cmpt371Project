@@ -26,7 +26,6 @@ public class NetworkClient {
     public Color clientColor = null;
     public final InputHandler networkInputs;
 
-    public final InputHandler lobbyInputs;
 
     public int currentCanvasID;
 
@@ -43,9 +42,7 @@ public class NetworkClient {
     public NetworkClient(String host, String port) throws IOException, IllegalArgumentException {
         observers = new ArrayList<>();
         networkInputs = new InputHandler();
-        lobbyInputs = new InputHandler();
         addObserver(networkInputs);
-        addObserver(lobbyInputs);
         serverResponseBoolSync = false;
         serverResponseBool = false;
         currentCanvasID = -1;
