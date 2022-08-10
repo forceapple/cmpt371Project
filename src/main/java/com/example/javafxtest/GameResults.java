@@ -2,8 +2,9 @@ package com.example.javafxtest;
 import javafx.scene.paint.Color;
 
 /**
- * A class used to send end game Results to the client's
- * Used for communication about game end Results between server and game
+ * A class used to store game results data and that information is accessed in Game.java to display results
+ * of the game
+ *
  */
 public class GameResults{
 

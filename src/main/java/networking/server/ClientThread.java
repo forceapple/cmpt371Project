@@ -7,6 +7,7 @@ import networking.NetworkMessage;
 import java.io.*;
 import java.net.*;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings("SynchronizeOnNonFinalField") // To disable warning about synchronizing on output
 /**
@@ -223,7 +224,7 @@ public class ClientThread extends Thread {
 	/*This method calls the method to store the score of the user in a hashmap and if game ended calls the method
 	  to check the winner
 	 */
-	private void processCalculateScoreRequest(String data) {
+	private synchronized void processCalculateScoreRequest(String data) {
 		String stringScore = data.split("/")[0];
 		String stringColor = data.split("/")[1];
 
@@ -240,13 +241,12 @@ public class ClientThread extends Thread {
 	//passing the information to clients after checking results i.e. if player won a game or there is a tie
 	private void checkGameResults() {
 		synchronized (server.clientOutputs) {
-			Map<Color, Integer> result = server.checkResult();
+			ConcurrentHashMap<Color, Integer> result = server.checkResult();
 			for (PrintWriter out : server.clientOutputs) {
+				Map.Entry<Color, Integer> entry = result.entrySet().iterator().next();
 				if (result.size() == 1) {
-					Map.Entry<Color, Integer> entry = result.entrySet().iterator().next();
 					out.println(NetworkMessage.generateScoresAndGameResults(entry.getValue().toString(), entry.getKey()));
 				} else {
-					Map.Entry<Color, Integer> entry = result.entrySet().iterator().next();
 					out.println(NetworkMessage.generateScoresAndGameResults(entry.getValue().toString(), Color.TRANSPARENT));
 				}
 			}

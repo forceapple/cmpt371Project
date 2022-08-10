@@ -252,11 +252,9 @@ public class NetworkClient {
         // This queue contains all the DrawInfo objects received from the server
         private final ConcurrentLinkedQueue<DrawInfo> drawInfoQueue;
 
-        private final ConcurrentLinkedQueue<GameResults> gameResults;
 
         private InputHandler() {
             drawInfoQueue = new ConcurrentLinkedQueue<>();
-            gameResults = new ConcurrentLinkedQueue<>();
         }
 
         public boolean areInputsAvailable() {
@@ -266,14 +264,6 @@ public class NetworkClient {
         public DrawInfo getNextInput() {
             return drawInfoQueue.poll();
         }
-
-        public boolean isGameOver() {
-            return !gameResults.isEmpty();
-        }
-        public GameResults getGameResults(){
-            return gameResults.poll();
-        }
-
 
 
         /**
@@ -306,8 +296,7 @@ public class NetworkClient {
                     Color winnerColor = Color.valueOf(stringColor);
                     int score = Integer.parseInt(winnerScore);
                     GameResults results = new GameResults(score, winnerColor);
-                    gameResults.add(results);
-                    Game.GameEndResults endResults = new Game.GameEndResults();
+                    Game.GameEndResults endResults = new Game.GameEndResults(results);
                     Platform.runLater(() -> {
                         endResults.run();
                     });

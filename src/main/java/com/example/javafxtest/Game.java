@@ -20,7 +20,7 @@ import networking.client.NetworkClient;
 
 public class Game {
     private Canvas[] canvases;
-    private static NetworkClient networkClient;
+    private NetworkClient networkClient;
 
     private static Label scoresLabel;
     private static Label playerColorLabel;
@@ -238,22 +238,25 @@ public class Game {
 
     //this method runs only when the game ends, and it updates the UI
     public static class GameEndResults implements Runnable{
+
+        private final GameResults results;
+        public GameEndResults(GameResults results) {
+            this.results = results;
+        }
         @Override
         public void run() {
-            while(networkClient.networkInputs.isGameOver()){
-                GameResults gameResults = networkClient.networkInputs.getGameResults();
-                    if (gameResults.getWinnerColor().equals(Color.TRANSPARENT)) {
+                    if (results.getWinnerColor().equals(Color.TRANSPARENT)) {
                         playerColorLabel.setText("Game Ended with a Tie");
-                        clientColorRect.setFill(Color.TRANSPARENT);
-                        scoresLabel.setText("Tie Score " + gameResults.getWinnerScore());
+                        clientColorRect.setFill(results.getWinnerColor());
+                        scoresLabel.setText("Tie Score " + results.getWinnerScore());
                     } else {
                         playerColorLabel.setText("Game Winner:");
-                        clientColorRect.setFill(gameResults.getWinnerColor());
-                        scoresLabel.setText("Winner Score " + gameResults.getWinnerScore());
+                        clientColorRect.setFill(results.getWinnerColor());
+                        scoresLabel.setText("Winner Score " + results.getWinnerScore());
                     }
             }
-        }
     }
 }
+
 
 

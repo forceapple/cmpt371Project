@@ -5,6 +5,7 @@ import javafx.scene.paint.Color;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A singleton class that contains all the data that needs to be shared across the different server threads
@@ -94,7 +95,9 @@ class ServerData {
 	 */
 	public boolean storeScore(Color color, int score){
 
-         clientScores.put(color, score);
+		synchronized (clientScores) {
+			clientScores.put(color, score);
+		}
 
 		//checking if all canvases are coloured
 		boolean allTrue = true;
@@ -108,10 +111,10 @@ class ServerData {
 	}
 
 	//checking if a player won a game or if there is a tie
-	public Map<Color, Integer> checkResult(){
+	public ConcurrentHashMap<Color, Integer> checkResult(){
 		int highestScore = Collections.max(clientScores.values());// This will return highest Score
 
-		Map <Color, Integer> winners = new HashMap<>();
+		ConcurrentHashMap <Color, Integer> winners = new ConcurrentHashMap<>();
 
 		for (Map.Entry<Color, Integer> entry : clientScores.entrySet()) {  // Iterate through hashmap
 			if (entry.getValue() == highestScore) {
