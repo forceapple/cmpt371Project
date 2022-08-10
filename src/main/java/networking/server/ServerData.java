@@ -92,7 +92,7 @@ class ServerData {
 	client colour and value as client score and once all canvases are locked i.e. they are coloured then a boolean
 	is returned which determines the end of the game
 	 */
-	public boolean storeScore(int score, Color color){
+	public boolean storeScore(Color color, int score){
 
          clientScores.put(color, score);
 

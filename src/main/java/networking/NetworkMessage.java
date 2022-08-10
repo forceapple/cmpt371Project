@@ -99,7 +99,7 @@ public class NetworkMessage {
      * Generates a message indicating to the server the score of the client and client's color
      * @return The end results of the game
      */
-    public static String generateScoresAndGameResults (String msg, Color clientColour, int endScore){return CALCULATE_SCORE_AND_GET_RESULTS + "-" + msg + "/" + clientColour + "/" + endScore; }
+    public static String generateScoresAndGameResults (String msg, Color clientColour){return CALCULATE_SCORE_AND_GET_RESULTS + "-" + msg + "/" + clientColour; }
 
     /**
      * Generates a message indicating to the server to release the currently owned canvas

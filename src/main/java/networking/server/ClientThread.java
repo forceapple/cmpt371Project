@@ -229,7 +229,7 @@ public class ClientThread extends Thread {
 
 		Color color = Color.valueOf(stringColor);
 		int score = Integer.parseInt(stringScore);
-		boolean allCanvasColored = server.storeScore(score, color);
+		boolean allCanvasColored = server.storeScore(color, score);
 
 		//if every canvas is coloured then check winner
 		if(allCanvasColored){
@@ -244,10 +244,10 @@ public class ClientThread extends Thread {
 			for (PrintWriter out : server.clientOutputs) {
 				if (result.size() == 1) {
 					Map.Entry<Color, Integer> entry = result.entrySet().iterator().next();
-					out.println(NetworkMessage.generateScoresAndGameResults("Game Winner", entry.getKey(), entry.getValue()));
+					out.println(NetworkMessage.generateScoresAndGameResults(entry.getValue().toString(), entry.getKey()));
 				} else {
 					Map.Entry<Color, Integer> entry = result.entrySet().iterator().next();
-					out.println(NetworkMessage.generateScoresAndGameResults("Game ended with a Tie", entry.getKey(), entry.getValue()));
+					out.println(NetworkMessage.generateScoresAndGameResults(entry.getValue().toString(), Color.TRANSPARENT));
 				}
 			}
 		}

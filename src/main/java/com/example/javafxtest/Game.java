@@ -242,19 +242,18 @@ public class Game {
         public void run() {
             while(networkClient.networkInputs.isGameOver()){
                 GameResults gameResults = networkClient.networkInputs.getGameResults();
-                if (gameResults.isGameOver()) {
-                    if (gameResults.getResultMsg().equals("Game ended with a Tie")) {
-                        playerColorLabel.setText(gameResults.getResultMsg());
+                    if (gameResults.getWinnerColor().equals(Color.TRANSPARENT)) {
+                        playerColorLabel.setText("Game Ended with a Tie");
                         clientColorRect.setFill(Color.TRANSPARENT);
                         scoresLabel.setText("Tie Score " + gameResults.getWinnerScore());
                     } else {
-                        playerColorLabel.setText(gameResults.getResultMsg());
+                        playerColorLabel.setText("Game Winner:");
                         clientColorRect.setFill(gameResults.getWinnerColor());
                         scoresLabel.setText("Winner Score " + gameResults.getWinnerScore());
                     }
-                }
             }
         }
     }
-
 }
+
+

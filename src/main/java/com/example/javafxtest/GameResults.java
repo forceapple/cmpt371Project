@@ -7,15 +7,11 @@ import javafx.scene.paint.Color;
  */
 public class GameResults{
 
-    private final boolean isGameOver;
     private final int winnerScore;
-    private final String gameResultMsg;
     private final Color winnerColor;
 
-    public GameResults(boolean isGameOver, int winnerScore, String gameResultMsg, Color winnerColor) {
-        this.isGameOver = isGameOver;
+    public GameResults(int winnerScore, Color winnerColor) {
         this.winnerScore = winnerScore;
-        this.gameResultMsg = gameResultMsg;
         this.winnerColor = winnerColor;
     }
 
@@ -23,13 +19,6 @@ public class GameResults{
         return winnerScore;
     }
 
-    public String getResultMsg() {
-        return gameResultMsg;
-    }
-
-    public boolean isGameOver() {
-        return isGameOver;
-    }
 
     public Color getWinnerColor(){
         return winnerColor;

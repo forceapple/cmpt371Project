@@ -241,7 +241,7 @@ public class NetworkClient {
         }
 
         String stringScore = Integer.toString(score);
-        output.println(NetworkMessage.generateScoresAndGameResults(stringScore, clientColor, 0));
+        output.println(NetworkMessage.generateScoresAndGameResults(stringScore, clientColor));
     }
 
     /**
@@ -300,12 +300,12 @@ public class NetworkClient {
                     }
                     break;
                 case NetworkMessage.CALCULATE_SCORE_AND_GET_RESULTS:
-                    String winnerMsg = data.split("/")[0];
+                    String winnerScore = data.split("/")[0];
                     String stringColor = data.split("/")[1];
-                    String winnerScore = data.split("/")[2];
+
                     Color winnerColor = Color.valueOf(stringColor);
                     int score = Integer.parseInt(winnerScore);
-                    GameResults results = new GameResults(true, score, winnerMsg, winnerColor);
+                    GameResults results = new GameResults(score, winnerColor);
                     gameResults.add(results);
                     Game.GameEndResults endResults = new Game.GameEndResults();
                     Platform.runLater(() -> {
