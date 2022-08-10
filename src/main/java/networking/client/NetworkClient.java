@@ -14,13 +14,21 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.Objects;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * The NetworkClient facilitates communication between the local game and the network server.
  * All communication between the two should be done via this class.
  */
 public class NetworkClient {
+
+    // The amount of time (in ms) that the game will wait for a response from the server.
+    private static final int SERVER_RESPONSE_TIMEOUT = 100;
+
     private PrintWriter output;
     private BufferedReader input;
     private Socket socket;
@@ -36,12 +44,16 @@ public class NetworkClient {
     // when there is a server response which is saved in serverResponseBool
     // This is honestly a messy approach. It might be better to change this in the future
     private final Boolean serverResponseBoolSync;
+
+    private final BlockingQueue<Boolean> serverBoolResponseQueue;
+
     private boolean serverResponseBool;
 
     private boolean clientRunning = false;
     private boolean firstDraw = false;
 
     public NetworkClient(String host, String port) throws IOException, IllegalArgumentException {
+        serverBoolResponseQueue = new LinkedBlockingQueue<>();
         observers = new ArrayList<>();
         networkInputs = new InputHandler();
         addObserver(networkInputs);
@@ -82,60 +94,110 @@ public class NetworkClient {
     }
 
     /**
-     * Attempts to register a colour with the server
+     * Attempts to register a colour with the server. The method will block until a response from the server occurs
+     * or the response times out.
      * @param color The colour being registered
      * @return Returns true if the colour is successfully registered and false if the colour is already in use
      */
     public boolean registerColor(Color color) {
         output.println(NetworkMessage.addColorRequestHeader(Integer.toString(color.hashCode())));
+        Boolean response;
 
-        synchronized(serverResponseBoolSync) {
-            try {
-                serverResponseBoolSync.wait();
-            }
-            catch (InterruptedException e) {
-                throw new RuntimeException(e);
+        try {
+            response = serverBoolResponseQueue.poll(SERVER_RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+            // Null response means timeout occurred
+            if(!Objects.nonNull(response)) {
+                throw new RuntimeException("Server timed out in registerColor");
             }
         }
+        catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
-        if(serverResponseBool) {
+        if(response) {
             clientColor = color;
         }
 
-        return serverResponseBool;
+        return response;
+
+//        output.println(NetworkMessage.addColorRequestHeader(Integer.toString(color.hashCode())));
+//
+//        synchronized(serverResponseBoolSync) {
+//            try {
+//                serverResponseBoolSync.wait();
+//            }
+//            catch (InterruptedException e) {
+//                throw new RuntimeException(e);
+//            }
+//        }
+//
+//        if(serverResponseBool) {
+//            clientColor = color;
+//        }
+//
+//        return serverResponseBool;
     }
 
     /**
      * Attempts to select a canvas for drawing. If successful then the canvas will be acquired by client
-     * and be unable to be used by any other client until the releaseCanvas function is called
-     * @param canvasId The ID of the canvas
+     * and be unable to be used by any other client until the releaseCanvas function is called.
+     * This method blocks until a response from the server is received or if the response timeout occurs.
+     * @param canvasID The ID of the canvas
      * @return true on success, false on failure
      */
-    public boolean selectCanvasForDrawing(int canvasId) {
-        // Should default to false in timeout
-        serverResponseBool = false;
+    public boolean selectCanvasForDrawing(int canvasID) {
 
         if(!clientRunning) {
             throw new IllegalStateException("Attempting to select canvas without a running client");
         }
 
-        output.println(NetworkMessage.addCanvasRequestHeader(Integer.toString(canvasId)));
+        output.println(NetworkMessage.addCanvasRequestHeader(Integer.toString(canvasID)));
 
-        synchronized(serverResponseBoolSync) {
-            try {
-                serverResponseBoolSync.wait(200);
-            }
-            catch (InterruptedException e) {
-                throw new RuntimeException(e);
+        Boolean response;
+
+        try {
+            response = serverBoolResponseQueue.poll(SERVER_RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+            // Null response means timeout occurred
+            if(!Objects.nonNull(response)) {
+                throw new RuntimeException("Server timed out in selectCanvasForDrawing");
             }
         }
+        catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
-        if(serverResponseBool) {
-            currentCanvasID = canvasId;
+        if(response) {
+            currentCanvasID = canvasID;
             firstDraw = true;
         }
 
-        return serverResponseBool;
+        return response;
+
+
+//        // Should default to false in timeout
+//        serverResponseBool = false;
+//
+//        if(!clientRunning) {
+//            throw new IllegalStateException("Attempting to select canvas without a running client");
+//        }
+//
+//        output.println(NetworkMessage.addCanvasRequestHeader(Integer.toString(canvasID)));
+//
+//        synchronized(serverResponseBoolSync) {
+//            try {
+//                serverResponseBoolSync.wait(200);
+//            }
+//            catch (InterruptedException e) {
+//                throw new RuntimeException(e);
+//            }
+//        }
+//
+//        if(serverResponseBool) {
+//            currentCanvasID = canvasID;
+//            firstDraw = true;
+//        }
+//
+//        return serverResponseBool;
     }
 
     /**
@@ -284,10 +346,8 @@ public class NetworkClient {
                     // Both cases result in the same code
                 case NetworkMessage.CANVAS_REQUEST_HEADER:
                 case NetworkMessage.COLOR_REQUEST_HEADER:
-                    synchronized (serverResponseBoolSync) {
-                        serverResponseBool = Boolean.parseBoolean(data);
-                        serverResponseBoolSync.notify();
-                    }
+                    // The main thread waits until there is something in the queue. This will wake up the main thread.
+                    serverBoolResponseQueue.add(Boolean.parseBoolean(data));
                     break;
                 case NetworkMessage.CALCULATE_SCORE_AND_GET_RESULTS:
                     String winnerScore = data.split("/")[0];
