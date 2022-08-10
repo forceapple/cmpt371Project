@@ -110,12 +110,15 @@ class NetworkClientTest {
         client1.startClient();
         client2.startClient();
 
+        final boolean[] client1Drawing = {false};
+        final boolean[] client2Drawing = {false};
+
         Semaphore lock = new Semaphore(0);
 
         Runnable client1GetCanvas = new Runnable() {
             @Override
             public void run() {
-                client1.selectCanvasForDrawing(1);
+                client1Drawing[0] = client1.selectCanvasForDrawing(1);
                 lock.release();
             }
         };
@@ -123,7 +126,7 @@ class NetworkClientTest {
         Runnable client2GetCanvas = new Runnable() {
             @Override
             public void run() {
-                client2.selectCanvasForDrawing(1);
+                client2Drawing[0] = client2.selectCanvasForDrawing(1);
                 lock.release();
             }
         };
@@ -141,6 +144,7 @@ class NetworkClientTest {
 
             lock.acquire(2);
 
+            assertNotSame(client1Drawing[0], client2Drawing[0]); // check that one of them actually got to draw
             assertFalse(client1.currentCanvasID == client2.currentCanvasID && client1.currentCanvasID != -1);
 
             client1.releaseCanvas();
@@ -148,5 +152,41 @@ class NetworkClientTest {
         }
 
     }
-
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
