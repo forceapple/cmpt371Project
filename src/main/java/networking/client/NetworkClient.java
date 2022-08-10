@@ -36,19 +36,11 @@ public class NetworkClient {
 
     public Color clientColor = null;
     public final InputHandler networkInputs;
-
     public int currentCanvasID;
 
-    // serverResponseBoolSync is only used as a synchronization lock for serverResponseBool
-    // This thread will call await() on serverResponseSync, and it will be woken up
-    // when there is a server response which is saved in serverResponseBool
-    // This is honestly a messy approach. It might be better to change this in the future
-    private final Boolean serverResponseBoolSync;
-
+    // A blocking queue used for thread safe communication between the main application thread and the network thread
+    // when registering a color or selecting a canvas
     private final BlockingQueue<Boolean> serverBoolResponseQueue;
-
-    private boolean serverResponseBool;
-
     private boolean clientRunning = false;
     private boolean firstDraw = false;
 
@@ -57,8 +49,6 @@ public class NetworkClient {
         observers = new ArrayList<>();
         networkInputs = new InputHandler();
         addObserver(networkInputs);
-        serverResponseBoolSync = false;
-        serverResponseBool = false;
         currentCanvasID = -1;
         socket = new Socket(host, Integer.parseInt(port));
         try {
@@ -119,23 +109,6 @@ public class NetworkClient {
         }
 
         return response;
-
-//        output.println(NetworkMessage.addColorRequestHeader(Integer.toString(color.hashCode())));
-//
-//        synchronized(serverResponseBoolSync) {
-//            try {
-//                serverResponseBoolSync.wait();
-//            }
-//            catch (InterruptedException e) {
-//                throw new RuntimeException(e);
-//            }
-//        }
-//
-//        if(serverResponseBool) {
-//            clientColor = color;
-//        }
-//
-//        return serverResponseBool;
     }
 
     /**
@@ -172,32 +145,6 @@ public class NetworkClient {
         }
 
         return response;
-
-
-//        // Should default to false in timeout
-//        serverResponseBool = false;
-//
-//        if(!clientRunning) {
-//            throw new IllegalStateException("Attempting to select canvas without a running client");
-//        }
-//
-//        output.println(NetworkMessage.addCanvasRequestHeader(Integer.toString(canvasID)));
-//
-//        synchronized(serverResponseBoolSync) {
-//            try {
-//                serverResponseBoolSync.wait(200);
-//            }
-//            catch (InterruptedException e) {
-//                throw new RuntimeException(e);
-//            }
-//        }
-//
-//        if(serverResponseBool) {
-//            currentCanvasID = canvasID;
-//            firstDraw = true;
-//        }
-//
-//        return serverResponseBool;
     }
 
     /**
