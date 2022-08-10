@@ -53,9 +53,9 @@ class ServerData {
 		canvasesInUse = new HashMap<>();
 		clientScores = new HashMap<>();
 
-		isLocked = new Boolean[8];
+		isLocked = new Boolean[64];
 
-		for(int i=0; i<8; i++){
+		for(int i=0; i<64; i++){
 			isLocked[i] = false;
 		}
 

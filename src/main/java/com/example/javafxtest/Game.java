@@ -29,19 +29,19 @@ public class Game {
     private int score = 0;
 
     Game(Stage primaryStage, NetworkClient client) {
-        canvases = new Canvas[8];
+        canvases = new Canvas[64];
 
         this.networkClient = client;
         GridPane grid = new GridPane();
 
-        for(int j=0; j<8; j++){
-            Canvas canvas = new Canvas(70, 70);
+        for(int j=0; j<64; j++){
+            Canvas canvas = new Canvas(100, 100);
             canvases[j] = canvas;
             canvas.setId(Integer.toString(j));
         }
         int count = 0;
-        for (int i= 0; i< 4 ; i++){
-            for (int j= 0; j< 2; j++){
+        for (int i= 0; i< 8 ; i++){
+            for (int j= 0; j< 8; j++){
                 // Put the canvases inside a StackPane and give the StackPane a border
                 StackPane pane = new StackPane(canvases[count]);
                 pane.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, null, new BorderWidths(3) )));
@@ -224,7 +224,7 @@ public class Game {
                 Color color = pixelReader.getColor(readX, readY);
 
                 // checks if a pixel is colored with PenColor
-                if (color.toString().equals(hexColor)) {
+                if (color.getRed() < 1 || color.getGreen() < 1 || color.getBlue() < 1){
                     coloredPixels += 1;
                 }
             }

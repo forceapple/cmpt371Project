@@ -56,11 +56,11 @@ public class NetworkMessage {
      *
      *      Calculate Score and Results message:
      *           Sending Request to Server:
-     *                 Uses SCORE + .toString of an int indicating score of player + color indicating client Color
+     *                 Uses SCORE_AND_RESULTS + .toString of an int indicating score of player + color indicating client Color
      *                 and sends it to the server
      *
      *          Server Responses:
-     *                 Uses SCORE + int score indicating the score of the winner or tie score and the color indicating
+     *                 Uses SCORE_AND_RESULTS + int score indicating the score of the winner or tie score and the color indicating
      *                 which player won the game or transparent color if there is a tie +  and sends it to all
      *                 clients.
      *

@@ -21,11 +21,12 @@ public class ClientThread extends Thread {
 	// Using output in any way requires synchronization since the output can be accessed by other threads at any time
 	private PrintWriter output;
 	private BufferedReader input;
+
 	public ClientThread(Socket socket) {
 		this.socket = socket;
 		server = ServerData.getInstance();
 	}
-	
+
 	public void run() {
 		System.out.println("Client Thread Starting");
 		try {
@@ -33,20 +34,20 @@ public class ClientThread extends Thread {
 			output = new PrintWriter(socket.getOutputStream(), true);
 
 
-			synchronized(server.clientOutputs) {
+			synchronized (server.clientOutputs) {
 				server.clientOutputs.add(output);
 			}
 			synchronized (server.clientSockets) {
 				server.clientSockets.add(socket);
 			}
 
-			while(true) {
+			while (true) {
 				// input.readLine is a blocking method so this thread will wait here until it receives an input
 				processMessage(input.readLine());
 			}
 		}
 		// SocketException should mean that the client disconnected
-		catch(SocketException ex) {
+		catch (SocketException ex) {
 			server.removeClient(socket, output);
 			System.out.println("Client Disconnected (" + socket.getInetAddress().toString()
 					+ ":" + socket.getPort() + ")");
@@ -56,12 +57,10 @@ public class ClientThread extends Thread {
 				socket.close();
 				output.close();
 				input.close();
-			}
-			catch(IOException e) {
+			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
-		}
-		catch(IOException ex) {
+		} catch (IOException ex) {
 			System.out.println("Exception on Server: " + ex.getMessage());
 			ex.printStackTrace();
 		}
@@ -117,13 +116,13 @@ public class ClientThread extends Thread {
 
 		// Make sure that the colour and canvas are valid
 		synchronized (server.clientColors) {
-			if(server.clientColors.get(socket.hashCode()) == null || server.clientColors.get(socket.hashCode()) != colorHash) {
+			if (server.clientColors.get(socket.hashCode()) == null || server.clientColors.get(socket.hashCode()) != colorHash) {
 				// TODO: Implement sending errors to the client
 				throw new IllegalStateException("Attempting to draw with an unregistered colour!");
 			}
 		}
-		synchronized(server.canvasesInUse) {
-			if(server.canvasesInUse.get(socket.hashCode()) == null || server.canvasesInUse.get(socket.hashCode()) != canvasID) {
+		synchronized (server.canvasesInUse) {
+			if (server.canvasesInUse.get(socket.hashCode()) == null || server.canvasesInUse.get(socket.hashCode()) != canvasID) {
 				throw new IllegalStateException("Attempting to draw on an canvas that isn't registered to the user");
 			}
 		}
@@ -131,12 +130,12 @@ public class ClientThread extends Thread {
 		// Send the draw message to all connected clients except for the one who sent it
 		// A lock MUST be acquired on the client outputs to ensure that clients are not added or deleted while iterating
 		synchronized (server.clientOutputs) {
-			for(PrintWriter out : server.clientOutputs) {
+			for (PrintWriter out : server.clientOutputs) {
 				// A lock MUST be acquired on the PrintWriters to ensure that two threads do not send messages at the exact same time
 				// Disable the warning. Although the compiler thinks out is a local variable it actually isn't
 				//noinspection SynchronizationOnLocalVariableOrMethodParameter
-				synchronized(out) {
-					if(!out.equals(output)) {
+				synchronized (out) {
+					if (!out.equals(output)) {
 						out.println(NetworkMessage.addDrawMessageHeader(data));
 					}
 				}
@@ -147,50 +146,46 @@ public class ClientThread extends Thread {
 	private void processCanvasRequest(String data) {
 		int canvasID = Integer.parseInt(data);
 
-		synchronized(server.isLocked) {
-			if(server.isLocked[canvasID]){
+		synchronized (server.isLocked) {
+			if (server.isLocked[canvasID]) {
 				// Send true or false depending on if the canvas is already locked
-				synchronized(output) {
+				synchronized (output) {
 					output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(false)));
 				}
-			}else {
-				synchronized(server.canvasesInUse) {
+			} else {
+				synchronized (server.canvasesInUse) {
 					// Send true or false depending on if the canvas is already owned
-					if(server.canvasesInUse.containsValue(canvasID) ) {
-						synchronized(output) {
+					if (server.canvasesInUse.containsValue(canvasID)) {
+						synchronized (output) {
 							output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(false)));
 						}
-					}
-					else {
+					} else {
 						server.canvasesInUse.put(socket.hashCode(), canvasID);
-						synchronized(output) {
+						synchronized (output) {
 							output.println(NetworkMessage.addCanvasRequestHeader(Boolean.toString(true)));
 						}
 					}
 				}
 			}
 		}
-
-
 	}
 
 	private void processCanvasRelease() {
-		synchronized(server.canvasesInUse) {
+		synchronized (server.canvasesInUse) {
 			server.canvasesInUse.remove(socket.hashCode());
 		}
 	}
 
 	private void processColorRequest(String data) {
 		int colorHash = Integer.parseInt(data);
-		synchronized(server.clientColors) {
-			if(server.clientColors.containsValue(colorHash)) {
-				synchronized(output) {
+		synchronized (server.clientColors) {
+			if (server.clientColors.containsValue(colorHash)) {
+				synchronized (output) {
 					output.println(NetworkMessage.addColorRequestHeader(Boolean.toString(false)));
 				}
-			}
-			else {
+			} else {
 				server.clientColors.put(socket.hashCode(), colorHash);
-				synchronized(output) {
+				synchronized (output) {
 					output.println(NetworkMessage.addColorRequestHeader(Boolean.toString(true)));
 				}
 			}
@@ -224,7 +219,7 @@ public class ClientThread extends Thread {
 	/*This method calls the method to store the score of the user in a hashmap and if game ended calls the method
 	  to check the winner
 	 */
-	private synchronized void processCalculateScoreRequest(String data) {
+	private void processCalculateScoreRequest(String data) {
 		String stringScore = data.split("/")[0];
 		String stringColor = data.split("/")[1];
 
@@ -233,7 +228,7 @@ public class ClientThread extends Thread {
 		boolean allCanvasColored = server.storeScore(color, score);
 
 		//if every canvas is coloured then check winner
-		if(allCanvasColored){
+		if (allCanvasColored) {
 			checkGameResults();
 		}
 	}
@@ -244,14 +239,20 @@ public class ClientThread extends Thread {
 			ConcurrentHashMap<Color, Integer> result = server.checkResult();
 			for (PrintWriter out : server.clientOutputs) {
 				Map.Entry<Color, Integer> entry = result.entrySet().iterator().next();
+
 				if (result.size() == 1) {
-					out.println(NetworkMessage.generateScoresAndGameResults(entry.getValue().toString(), entry.getKey()));
+					synchronized (out) {
+						out.println(NetworkMessage.generateScoresAndGameResults(entry.getValue().toString(), entry.getKey()));
+					}
 				} else {
-					out.println(NetworkMessage.generateScoresAndGameResults(entry.getValue().toString(), Color.TRANSPARENT));
+					synchronized (out) {
+						out.println(NetworkMessage.generateScoresAndGameResults(entry.getValue().toString(), Color.TRANSPARENT));
+					}
 				}
 			}
 		}
 	}
+
 }
 
 
