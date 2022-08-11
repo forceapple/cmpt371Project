@@ -20,6 +20,7 @@ public class Lobby {
 
     private ListView<Rectangle> listView = new ListView<>();
     Lobby(Stage primaryStage, NetworkClient client) {
+        this.networkClient = client;
 
         //setting up the GridPane
         GridPane grid = new GridPane();
@@ -52,10 +53,9 @@ public class Lobby {
         primaryStage.setTitle("Deny & Conquer");
         primaryStage.show();
 
-        networkClient.sendJoinGame();
         AnimationTimer animationTimer = getAnimationTimer();
         animationTimer.start();
-
+        networkClient.sendJoinGame();
     }
 
     private void addPlayerColor(ListView<Rectangle> listView, Color color) {
@@ -74,8 +74,7 @@ public class Lobby {
             @Override
             public void handle(long l) {
                 // Only try to draw if the queue has something to draw
-                while(networkClient.networkInputs.areInputsAvailable()){
-                    System.out.println("Now adding new color to the lobby");
+                while(networkClient.networkInputs.areInputsLobbyAvailable()){
                     Color color = networkClient.networkInputs.getNextPlayerInput();
                     addPlayerColor(getListView(),color);
                 }
