@@ -105,6 +105,7 @@ public class LaunchScreenController {
         redTextField.setText(Double.toString(((Color)canvasPaint).getRed()));
         blueTextField.setText(Double.toString(((Color)canvasPaint).getBlue()));
         greenTextField.setText(Double.toString(((Color)canvasPaint).getGreen()));
+        registerColorButton.setDisable(false);
     }
     private void colorCanvas(Canvas canvas, int colorIndex) {
         GraphicsContext gc = canvas.getGraphicsContext2D();
@@ -130,7 +131,7 @@ public class LaunchScreenController {
                 // Only reaches here if no exceptions
                 connectMessage.setText("Connection Successful");
                 connectButton.setDisable(true); // Don't allow connecting multiple times
-                registerColorButton.setDisable(false); // Now allow registering colours
+                //registerColorButton.setDisable(false); // Now allow registering colours
             }
             catch(ConnectException e) {
                 connectMessage.setFill(Color.RED);
@@ -185,6 +186,7 @@ public class LaunchScreenController {
                 GraphicsContext gc = selectedColorCanvas.getGraphicsContext2D();
                 gc.setFill(color);
                 gc.fillRect(0, 0, selectedColorCanvas.getWidth(), selectedColorCanvas.getHeight());
+                registerColorButton.setDisable(false);
             }
         }
         catch(NumberFormatException ignored) {
