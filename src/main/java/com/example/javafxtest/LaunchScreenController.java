@@ -4,7 +4,9 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -167,8 +169,25 @@ public class LaunchScreenController {
     @FXML
     private void startGameButtonClicked(MouseEvent e) {
         networkClient.startClient();
-        Stage stage = new Stage();
-        Game game = new Game(stage, networkClient);
+
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("Lobby.fxml"));
+            Parent root = loader.load();
+            Scene scene = new Scene(root);
+            Stage stage = new Stage();
+            stage.setScene(scene);
+            stage.setTitle("Lobby");
+
+            LobbyController lobbyController = loader.getController();
+            lobbyController.setNetworkClient(networkClient);
+
+            stage.show();
+        }
+        catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+
         ((Stage)((Node)e.getSource()).getScene().getWindow()).close(); // Get the stage and close it
     }
 

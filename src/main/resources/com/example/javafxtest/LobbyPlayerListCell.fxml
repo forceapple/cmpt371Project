@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Text?>
+
+<AnchorPane prefHeight="40.0" prefWidth="200.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Canvas fx:id="playerColorCanvas" height="30.0" layoutX="14.0" layoutY="5.0" width="30.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="15.0" AnchorPane.topAnchor="5.0" />
+      <Text fx:id="playerNameText" layoutX="68.0" layoutY="24.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Text" AnchorPane.bottomAnchor="12.0" AnchorPane.leftAnchor="60.0" AnchorPane.topAnchor="11.0" />
+      <Label contentDisplay="RIGHT" focusTraversable="false" layoutX="114.0" layoutY="11.0" text="Ready?" AnchorPane.bottomAnchor="11.399999999999999" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="11.0">
+         <graphic>
+            <RadioButton fx:id="playerReadyButton" mnemonicParsing="false" />
+         </graphic>
+      </Label>
+   </children>
+</AnchorPane>

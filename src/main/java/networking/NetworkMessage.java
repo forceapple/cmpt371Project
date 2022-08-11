@@ -1,6 +1,7 @@
 package networking;
 
 import com.example.javafxtest.DrawInfo;
+import com.example.javafxtest.LobbyPlayer;
 import javafx.scene.paint.Color;
 
 /**
@@ -64,6 +65,22 @@ public class NetworkMessage {
      *                 which player won the game or transparent color if there is a tie +  and sends it to all
      *                 clients.
      *
+     *      Lobby join message:
+     *          Uses the LOBBY_PLAYER_JOIN_HEADER + The .toString of the joining player's color + '/' + A string representing the player's name
+     *          The format of this message is the same when sent to or from the server. It is just forwarded to all connected clients.
+     *
+     *      Lobby left message:
+     *          Uses the LOBBY_PLAYER_LEFT_HEADER + the .toString of the leaving player's color.
+     *          This message is only ever sent from the server to all connected clients
+     *
+     *      Lobby player ready message:
+     *          Uses the LOBBY_PLAYER_READY_HEADER + the .toString of the player's color + '/' + .toString of a boolean indicating the player's new ready status
+     *          This message is the same when sent to or from the server
+     *
+     *      Lobby start countdown message:
+     *          Uses the LOBBY_START_COUNTDOWN_HEADER and an empty data section.
+     *          This message is only ever sent from the server to the clients. It indicates that all players are ready and the countdown timer should start
+     *
      *
      *
      */
@@ -74,8 +91,11 @@ public class NetworkMessage {
     public static final String CANVAS_LOCK = "CANVAS_LOCK";
     public static final String CANVAS_CLEAR = "CANVAS_CLEAR";
     public static final String CANVAS_OWN = "CANVAS_OWN";
-
     public static final String CALCULATE_SCORE_AND_GET_RESULTS = "SCORE_AND_RESULTS";
+    public static final String LOBBY_PLAYER_JOIN_HEADER = "LOBBY_PLAYER_JOIN";
+    public static final String LOBBY_PLAYER_LEFT_HEADER = "LOBBY_PLAYER_LEFT";
+    public static final String LOBBY_PLAYER_READY_HEADER = "LOBBY_PLAYER_READY";
+    public static final String LOBBY_START_COUNTDOWN_HEADER = "LOBBY_START_COUNTDOWN";
 
     public static String addDrawMessageHeader(String msg) {
         return DRAW_MESSAGE_HEADER + "-" + msg;
@@ -93,6 +113,54 @@ public class NetworkMessage {
     }
     public static String addCanvasClearRequestHeader(String msg) {return CANVAS_CLEAR + "-" + msg; }
     public static String addCanvasOwnRequestHeader(String msg, Color ownedColor) {return CANVAS_OWN + "-" + msg + "/" + ownedColor; }
+
+    public static String addLobbyPlayerJoinHeader(String msg) {
+        return LOBBY_PLAYER_JOIN_HEADER + "-" + msg;
+    }
+
+    public static String addLobbyPlayerReadyHeader(String msg) {
+        return LOBBY_PLAYER_READY_HEADER + "-" + msg;
+    }
+
+    public static String addLobbyPlayerLeftHeader(String msg) {
+        return LOBBY_PLAYER_LEFT_HEADER + "-" + msg;
+    }
+
+    /**
+     * Generates a message indicating that a player has joined the lobby
+     * @param player The player who joined the lobby
+     * @return The string encoding of the message
+     */
+    public static String generateLobbyPlayerJoinMessage(LobbyPlayer player) {
+        return addLobbyPlayerJoinHeader(player.getPlayerColor().toString() + "/" + player.getPlayerName());
+    }
+
+    /**
+     * Generates a message indicating the ready status of a player
+     * @param player The player whose status is being changed
+     * @param isReady The new ready status of the player
+     * @return The string encoding of the message
+     */
+    public static String generateLobbyPlayerReadyMessage(LobbyPlayer player, boolean isReady) {
+        return addLobbyPlayerReadyHeader(player.getPlayerColor().toString() + "/" + Boolean.toString(isReady));
+    }
+
+    /**
+     * Generates a message indicating the player has left the lobby
+     * @param player The player who has left
+     * @return The string encoding of the message
+     */
+    public static String generateLobbyPlayerLeftMessage(LobbyPlayer player) {
+        return addLobbyPlayerLeftHeader(player.getPlayerColor().toString());
+    }
+
+    /**
+     * Generates a message indicating to the clients that the game start countdown should begin
+     * @return The string encoding of the message
+     */
+    public static String generateLobbyStartCountdownMessage() {
+        return LOBBY_START_COUNTDOWN_HEADER + "-";
+    }
 
     /**
      * Generates a message indicating to the server the score of the client and client's color
