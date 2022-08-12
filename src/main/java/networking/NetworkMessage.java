@@ -3,6 +3,8 @@ package networking;
 import com.example.javafxtest.DrawInfo;
 import javafx.scene.paint.Color;
 
+import java.util.List;
+
 /**
  * A class containing static fields and methods related to sending messages over the network.
  *
@@ -82,10 +84,8 @@ public class NetworkMessage {
     }
     public static String addCanvasClearRequestHeader(String msg) {return CANVAS_CLEAR + "-" + msg; }
     public static String addCanvasOwnRequestHeader(String msg, Color ownedColor) {return CANVAS_OWN + "-" + msg + "/" + ownedColor; }
+    public static String addJoinGameHeader(Color msg) {return JOIN_GAME + "-" + msg; }
 
-    public static String addJoinGameHeader(Color msg) {
-        return JOIN_GAME + "-" + msg;
-    }
     /**
      * Generates a message indicating to the server to release the currently owned canvas
      * @return The string encoding of the message

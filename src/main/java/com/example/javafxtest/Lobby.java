@@ -14,13 +14,21 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import networking.client.NetworkClient;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Lobby {
 
     private NetworkClient networkClient;
 
+    private List<Color> colors = new ArrayList<>();
     private ListView<Rectangle> listView = new ListView<>();
+
+    private Color hostColorLobby;
     Lobby(Stage primaryStage, NetworkClient client) {
         this.networkClient = client;
+        hostColorLobby = client.clientColor;
+
 
         //setting up the GridPane
         GridPane grid = new GridPane();
@@ -33,13 +41,24 @@ public class Lobby {
         GridPane.setConstraints(labelLobby, 2, 0);
         GridPane.setHalignment(labelLobby, HPos.CENTER);
 
+        //hostColor = client.clientColor;
+        Rectangle rectangle = new Rectangle();
+        rectangle.setWidth(30);
+        rectangle.setHeight(30);
+        rectangle.setFill(hostColorLobby);
+        GridPane.setConstraints(rectangle, 1,1);
+
+        Label labelHost = new Label("is the host and can start the game");
+        GridPane.setConstraints(labelHost, 2,1);
+
         //setting up the listview
         addPlayerColor(getListView(),client.clientColor);
-        GridPane.setConstraints(getListView(), 2, 1);
+        colors.add(client.clientColor);
+        GridPane.setConstraints(getListView(), 2, 2);
 
         //setting up the button
         Button buttonStartGame = new Button("Start Game");
-        GridPane.setConstraints(buttonStartGame, 2, 2);
+        GridPane.setConstraints(buttonStartGame, 2, 3);
         GridPane.setHalignment(buttonStartGame, HPos.CENTER);
         buttonStartGame.setOnAction(e -> {
             Stage stage = new Stage();
@@ -47,7 +66,7 @@ public class Lobby {
             ((Stage)((Node)e.getSource()).getScene().getWindow()).close();
         });
 
-        grid.getChildren().addAll(labelLobby, getListView(), buttonStartGame);
+        grid.getChildren().addAll(labelLobby, rectangle, labelHost, getListView(), buttonStartGame);
         Scene scene = new Scene(grid, 600, 600);
         primaryStage.setScene(scene);
         primaryStage.setTitle("Deny & Conquer");
@@ -56,14 +75,18 @@ public class Lobby {
         AnimationTimer animationTimer = getAnimationTimer();
         animationTimer.start();
         networkClient.sendJoinGame();
+
     }
 
     private void addPlayerColor(ListView<Rectangle> listView, Color color) {
+        if(colors.contains(color))
+            return;
         Rectangle rectangle = new Rectangle();
         rectangle.setHeight(30);
         rectangle.setWidth(30);
         rectangle.setFill(color);
         listView.getItems().add(rectangle);
+        colors.add(color);
     }
     private ListView<Rectangle> getListView() {
         return listView;

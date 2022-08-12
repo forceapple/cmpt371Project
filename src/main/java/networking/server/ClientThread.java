@@ -222,15 +222,18 @@ public class ClientThread extends Thread {
 
 	private void processJoinGameMessage(String data) {
 		Color playerColor = Color.valueOf(data);
+		ServerData.getInstance().addColor(playerColor);
+
 		synchronized (server.clientOutputs) {
 			for(PrintWriter out : server.clientOutputs) {
 				// A lock MUST be acquired on the PrintWriters to ensure that two threads do not send messages at the exact same time
 				// Disable the warning. Although the compiler thinks out is a local variable it actually isn't
 				//noinspection SynchronizationOnLocalVariableOrMethodParameter
 				synchronized(out) {
-					if(!out.equals(output)) {
-						out.println(NetworkMessage.addJoinGameHeader(playerColor));
-					}
+						for (Color c: ServerData.getInstance().clientColorsJoined) {
+							out.println(NetworkMessage.addJoinGameHeader(c));
+
+						}
 				}
 			}
 		}

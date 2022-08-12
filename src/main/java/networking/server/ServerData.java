@@ -1,5 +1,7 @@
 package networking.server;
 
+import javafx.scene.paint.Color;
+
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -32,6 +34,10 @@ class ServerData {
 	// and the hashcode of the socket of the user.
 	// format is socket hashcode, canvasID
 	public final Map<Integer, Integer> canvasesInUse;
+
+	public final List<Color> clientColorsJoined;
+
+	public Color hostColor;
 	public Boolean[] isLocked;
 
 	public static ServerData getInstance() {
@@ -47,6 +53,8 @@ class ServerData {
 		clientSockets = new ArrayList<>();
 		clientColors = new HashMap<>();
 		canvasesInUse = new HashMap<>();
+		clientColorsJoined = new ArrayList<>();
+		hostColor = Color.WHITE;
 		isLocked = new Boolean[64];
 
 		for(int i=0; i<64; i++){
@@ -80,5 +88,16 @@ class ServerData {
 		synchronized(isLocked) {
 			this.isLocked[canvasID] = true;
 		}
+	}
+
+	public void addColor(Color color) {
+		clientColorsJoined.add(color);
+	}
+
+	public Color getHostColor() {
+		return hostColor;
+	}
+	public void setHostColor(Color color) {
+		hostColor = color;
 	}
 }
