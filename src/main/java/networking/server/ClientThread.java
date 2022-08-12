@@ -45,8 +45,8 @@ public class ClientThread extends Thread {
 		}
 		// SocketException should mean that the client disconnected
 		catch (SocketException ex) {
-			server.removeClient(clientID);
 			sendLobbyPlayerLeft(); // Send disconnect message if client disconnected
+			server.removeClient(clientID);
 			System.out.println("Client Disconnected (" + socket.getInetAddress().toString()
 					+ ":" + socket.getPort() + ")");
 

@@ -3,11 +3,15 @@ package networking.server;
 import java.net.*;
 import java.io.*;
 
-public class NetworkServer extends Thread{
+public class NetworkServer extends Thread {
+	private final static int PORT = 7070;
 	private final int port;
-	
+
 	public NetworkServer(int port) {
 		this.port = port;	
+	}
+	public NetworkServer() {
+		port = PORT;
 	}
 	
 	public void run() {

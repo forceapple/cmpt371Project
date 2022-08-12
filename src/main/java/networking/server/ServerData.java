@@ -100,8 +100,28 @@ class ServerData {
 		readyPlayersInLobby.remove((Integer) clientID);
 		checkAllReady(); // The player that left could be the last player that wasn't ready
 
-
 		// Note: The color belonging to a client is not removed from the score even if the client disconnects
+
+		// All users disconnected. Reset server state and restart server connection thread to allow new connections
+		if(clientOutputs.size() == 0) {
+			System.out.println("All client's disconnected. Resetting Server");
+			resetServerState();
+			NetworkServer server = new NetworkServer();
+			server.setName("Server");
+			server.setDaemon(true);
+			server.start();
+		}
+	}
+
+	private synchronized void resetServerState() {
+		clientOutputs.clear();
+		clientColors.clear();
+		canvasesInUse.clear();
+		clientScores.clear();
+		playersInLobby.clear();
+		readyPlayersInLobby.clear();
+		lobbyMessagesList.clear();
+		Arrays.fill(isLocked, false);
 	}
 
 
