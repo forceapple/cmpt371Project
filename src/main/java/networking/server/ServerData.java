@@ -2,7 +2,10 @@ package networking.server;
 
 import javafx.scene.paint.Color;
 import networking.NetworkMessage;
+
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.ServerSocket;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -45,6 +48,8 @@ class ServerData {
 	private final List<Integer> readyPlayersInLobby;
 	// A list that contains all the lobby messages sent
 	private final List<String> lobbyMessagesList;
+
+	private ServerSocket serverSocket;
 
 	public static ServerData getInstance() {
 		if(instance == null) {
@@ -394,7 +399,24 @@ class ServerData {
 			String message = NetworkMessage.generateLobbyStartCountdownMessage();
 			addLobbyMessageToList(message);
 			sendMessage(message);
+
+			// Closing the server socket will prevent any new players from joining
+			try {
+				serverSocket.close();
+			}
+			catch (IOException e) {
+				throw new RuntimeException(e);
+			}
 		}
+	}
+
+	/**
+	 * Sets the ServerSocket that the game uses to create new connections.
+	 * This must be set before any clients connect and the game starts.
+	 * @param socket The ServerSocket
+	 */
+	public synchronized void setServerSocket(ServerSocket socket) {
+		this.serverSocket = socket;
 	}
 
 
