@@ -1,9 +1,7 @@
 package networking.server;
 
-import com.example.javafxtest.LobbyPlayer;
 import javafx.scene.paint.Color;
 import networking.NetworkMessage;
-
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -328,7 +326,7 @@ class ServerData {
 	 * <p>
 	 * This method should only be called when the game is completely finished (i.e. all canvases coloured in)
 	 * <p>
-	 * his method is thread-safe and can be called by any thread without worrying about concurrency.T
+	 * This method is thread-safe and can be called by any thread without worrying about concurrency.
 	 * @return The winning score
 	 */
 	public synchronized int getWinnerScore() {
