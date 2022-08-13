@@ -1,11 +1,14 @@
 package networking.server;
 
 import com.example.javafxtest.DrawInfo;
+import com.example.javafxtest.LobbyPlayer;
 import javafx.scene.paint.Color;
 import networking.NetworkMessage;
 
 import java.io.*;
 import java.net.*;
+import java.util.Objects;
+
 /**
  * ClientThread is the thread that is created for every new client that connects to the server.
  * It handles all the messages sent to the server from the client and is also responsible for sending responses
@@ -15,6 +18,8 @@ public class ClientThread extends Thread {
 	private final ServerData server;
 	private final int clientID;
 	private BufferedReader input;
+
+	private LobbyPlayer player = null;
 
 	public ClientThread(Socket socket) {
 		this.socket = socket;
@@ -40,6 +45,7 @@ public class ClientThread extends Thread {
 		}
 		// SocketException should mean that the client disconnected
 		catch (SocketException ex) {
+			sendLobbyPlayerLeft(); // Send disconnect message if client disconnected
 			server.removeClient(clientID);
 			System.out.println("Client Disconnected (" + socket.getInetAddress().toString()
 					+ ":" + socket.getPort() + ")");
@@ -63,6 +69,14 @@ public class ClientThread extends Thread {
 		}
 
 		System.out.println("Client Thread Stopping");
+	}
+
+	private void sendLobbyPlayerLeft() {
+		String message = NetworkMessage.generateLobbyPlayerLeftMessage(player);
+		server.addLobbyMessageToList(message);
+		if(Objects.nonNull(player)) {
+			server.sendMessage(message);
+		}
 	}
 
 	private void processMessage(String msg) {
@@ -98,6 +112,12 @@ public class ClientThread extends Thread {
 				break;
 			case NetworkMessage.CALCULATE_SCORE_AND_GET_RESULTS:
 				processCalculateScoreRequest(data);
+				break;
+			case NetworkMessage.LOBBY_PLAYER_JOIN_HEADER:
+				processPlayerJoinMessage(data);
+				break;
+			case NetworkMessage.LOBBY_PLAYER_READY_HEADER:
+				processPlayerReadyMessage(data);
 				break;
 			default:
 				// TODO: Don't throw exception on server, instead sent some error to client
@@ -176,6 +196,33 @@ public class ClientThread extends Thread {
 			server.sendMessage(NetworkMessage.generateScoresAndGameResults(Integer.toString(server.getWinnerScore()), server.getWinningColor()));
 		}
 	}
+
+	private void processPlayerJoinMessage(String data) {
+		String[] fields = data.split("/");
+		player = new LobbyPlayer(Color.valueOf(fields[0]), fields[1]);
+		String message = NetworkMessage.addLobbyPlayerJoinHeader(data);
+
+
+		// Send message to self, then send history to self, then add to history, then send to everyone else
+		// A message must always be added to history before being sent to everyone
+		// this prevents someone from joining at the perfect time and missing the message since it was sent to everyone (they didn't join yet)
+		// then they asked for history and got it (message wasn't in history) then finally the message got added to history but they missed it.
+		// The self entry needs to be the first one the new player gets so it needs to be sent before history leading to this setup.
+		server.sendMessage(message, clientID);
+		server.sendLobbyMessageHistory(clientID);
+		server.addLobbyMessageToList(message);
+		server.sendMessageExcluding(message, clientID);
+
+		server.lobbyPlayerJoined(clientID);
+	}
+
+	private void processPlayerReadyMessage(String data) {
+		server.lobbyPlayerReady(clientID, Boolean.parseBoolean(data.split("/")[1]));
+		String message = NetworkMessage.addLobbyPlayerReadyHeader(data);
+		server.addLobbyMessageToList(message);
+		server.sendMessage(message);
+	}
+
 }
 
 

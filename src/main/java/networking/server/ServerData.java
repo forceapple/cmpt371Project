@@ -1,8 +1,11 @@
 package networking.server;
 
 import javafx.scene.paint.Color;
+import networking.NetworkMessage;
 
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.ServerSocket;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -39,6 +42,14 @@ class ServerData {
 	private final Map<Color, Integer> clientScores;
 	private final Boolean[] isLocked;
 
+	// A list that contains the clientIDs of all players in the lobby
+	private final List<Integer> playersInLobby;
+	// A list that contains the clientIDs of all players in the lobby who are ready
+	private final List<Integer> readyPlayersInLobby;
+	// A list that contains all the lobby messages sent
+	private final List<String> lobbyMessagesList;
+
+	private ServerSocket serverSocket;
 
 	public static ServerData getInstance() {
 		if(instance == null) {
@@ -53,6 +64,9 @@ class ServerData {
 		clientColors = new HashMap<>();
 		canvasesInUse = new HashMap<>();
 		clientScores = new HashMap<>();
+		playersInLobby = new ArrayList<>();
+		readyPlayersInLobby = new ArrayList<>();
+		lobbyMessagesList =  new LinkedList<>();
 
 		isLocked = new Boolean[64];
 		Arrays.fill(isLocked, false);
@@ -81,7 +95,33 @@ class ServerData {
 		// The PrintWriter is closed in the ClientThread
 		clientOutputs.remove(clientID);
 
+
+		playersInLobby.remove((Integer) clientID); // removal by object
+		readyPlayersInLobby.remove((Integer) clientID);
+		checkAllReady(); // The player that left could be the last player that wasn't ready
+
 		// Note: The color belonging to a client is not removed from the score even if the client disconnects
+
+		// All users disconnected. Reset server state and restart server connection thread to allow new connections
+		if(clientOutputs.size() == 0) {
+			System.out.println("All client's disconnected. Resetting Server");
+			resetServerState();
+			NetworkServer server = new NetworkServer();
+			server.setName("Server");
+			server.setDaemon(true);
+			server.start();
+		}
+	}
+
+	private synchronized void resetServerState() {
+		clientOutputs.clear();
+		clientColors.clear();
+		canvasesInUse.clear();
+		clientScores.clear();
+		playersInLobby.clear();
+		readyPlayersInLobby.clear();
+		lobbyMessagesList.clear();
+		Arrays.fill(isLocked, false);
 	}
 
 
@@ -322,6 +362,85 @@ class ServerData {
 		return Collections.max(clientScores.values());// This will return highest Score
 	}
 
+
+	/**
+	 * Adds the client to the list of players that joined the lobby
+	 * <p>
+	 * This method is thread-safe and can be called by any thread without worrying about concurrency.
+	 * @param clientID The ID of the client
+	 */
+	public synchronized void lobbyPlayerJoined(int clientID) {
+		playersInLobby.add(clientID);
+	}
+
+	/**
+	 * Changes the lobby ready status of the client
+	 * <p>
+	 * This method is thread-safe and can be called by any thread without worrying about concurrency.
+	 * @param clientID The ID of the client
+	 * @param isReady The new ready status
+	 */
+	public synchronized void lobbyPlayerReady(int clientID, boolean isReady) {
+		if(isReady) {
+			if(!readyPlayersInLobby.contains(clientID)) {
+				readyPlayersInLobby.add(clientID);
+			}
+		}
+		else {
+			readyPlayersInLobby.remove((Integer) clientID); // object removal
+		}
+
+		checkAllReady();
+	}
+
+	/**
+	 * Adds the lobby message to the list of all lobby messages sent
+	 * @param message The message to be added
+	 */
+	public synchronized void addLobbyMessageToList(String message) {
+		lobbyMessagesList.add(message);
+	}
+
+	/**
+	 * Sends the complete lobby message history to the provided client
+	 * @param clientID The ID of the client to send the list to
+	 */
+	public synchronized void sendLobbyMessageHistory(int clientID) {
+		for(String msg : lobbyMessagesList) {
+			sendMessage(msg, clientID);
+		}
+	}
+
+	/**
+	 * Checks if all the players in the lobby are ready. If they are then it sends the lobby start countdown message
+	 */
+	private synchronized void checkAllReady() {
+		if(playersInLobby.size() == readyPlayersInLobby.size()) {
+			String message = NetworkMessage.generateLobbyStartCountdownMessage();
+			addLobbyMessageToList(message);
+			sendMessage(message);
+
+			// Closing the server socket will prevent any new players from joining
+			try {
+				serverSocket.close();
+			}
+			catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
+
+	/**
+	 * Sets the ServerSocket that the game uses to create new connections.
+	 * This must be set before any clients connect and the game starts.
+	 * @param socket The ServerSocket
+	 */
+	public synchronized void setServerSocket(ServerSocket socket) {
+		this.serverSocket = socket;
+	}
+
+
+
 	//checking if a player won a game or if there is a tie
 	public ConcurrentHashMap<Color, Integer> checkResult(){
 		int highestScore = Collections.max(clientScores.values());// This will return highest Score
@@ -335,6 +454,9 @@ class ServerData {
 		}
 		return winners;
 	}
+
+
+
 
 
 

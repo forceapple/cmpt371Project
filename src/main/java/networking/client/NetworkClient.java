@@ -1,8 +1,6 @@
 package networking.client;
 
-import com.example.javafxtest.DrawInfo;
-import com.example.javafxtest.Game;
-import com.example.javafxtest.GameResults;
+import com.example.javafxtest.*;
 import javafx.application.Platform;
 import javafx.scene.paint.Color;
 import networking.NetworkMessage;
@@ -16,9 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.*;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * The NetworkClient facilitates communication between the local game and the network server.
@@ -43,6 +38,9 @@ public class NetworkClient {
     private final BlockingQueue<Boolean> serverBoolResponseQueue;
     private boolean clientRunning = false;
     private boolean firstDraw = false;
+
+    private LobbyControllerCallback lobbyCallback;
+
 
     public NetworkClient(String host, String port) throws IOException, IllegalArgumentException {
         serverBoolResponseQueue = new LinkedBlockingQueue<>();
@@ -254,13 +252,42 @@ public class NetworkClient {
     }
 
     /**
+     * Starts the lobby with the given lobby callback
+     * @param lobbyCallback The callback class for the lobby
+     * @param player The player who joined
+     */
+    public void startLobby(LobbyControllerCallback lobbyCallback, LobbyPlayer player) {
+        this.lobbyCallback = lobbyCallback;
+        output.println(NetworkMessage.generateLobbyPlayerJoinMessage(player));
+    }
+
+    public void setPlayerReady(LobbyPlayer player, boolean isReady) {
+        output.println(NetworkMessage.generateLobbyPlayerReadyMessage(player, isReady));
+    }
+
+    /**
      * An implementation of the NetworkObserver interface.
      * Handles receiving information from the server.
      */
     public class InputHandler implements NetworkObserver {
         // This queue contains all the DrawInfo objects received from the server
         private final ConcurrentLinkedQueue<DrawInfo> drawInfoQueue;
+        private final List<LobbyPlayer> lobbyPlayersList = new ArrayList<>();
 
+        /**
+         * Gets the index of a lobby player in the lobbyPlayersList by color.
+         * @param color The color of the lobby player
+         * @return The index of the lobby player. -1 if not found.
+         */
+        private int getLobbyPlayerIndexByColor(Color color) {
+            for(int i = 0; i < lobbyPlayersList.size(); i++) {
+                if(lobbyPlayersList.get(i).getPlayerColor().equals(color)) {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
 
         private InputHandler() {
             drawInfoQueue = new ConcurrentLinkedQueue<>();
@@ -320,6 +347,43 @@ public class NetworkClient {
                     Color color = Color.valueOf(msg[1]);
                     DrawInfo own = new DrawInfo(0, 0, Integer.parseInt(msg[0]), color, false, false, true);
                     drawInfoQueue.add(own);
+                    break;
+
+                case NetworkMessage.LOBBY_PLAYER_JOIN_HEADER:
+                    if(Objects.isNull(lobbyCallback)) {
+                        break;
+                    }
+
+                    String[] fields = data.split("/", 2);
+                    LobbyPlayer newPlayer = new LobbyPlayer(Color.valueOf(fields[0]), fields[1]);
+                    if(newPlayer.getPlayerColor().equals(clientColor)) {
+                        newPlayer = new LobbyPlayer(clientColor, "(You) " + fields[1]);
+                        newPlayer.setPlayerIsUser(true);
+                    }
+                    lobbyPlayersList.add(newPlayer);
+                    lobbyCallback.addPlayer(newPlayer);
+                    break;
+                case NetworkMessage.LOBBY_PLAYER_LEFT_HEADER:
+                    if(Objects.isNull(lobbyCallback)) {
+                        break;
+                    }
+
+                    int leftPlayerIndex = getLobbyPlayerIndexByColor(Color.valueOf(data));
+                    lobbyCallback.removePlayer(leftPlayerIndex);
+                    lobbyPlayersList.remove(leftPlayerIndex);
+                    break;
+                case NetworkMessage.LOBBY_PLAYER_READY_HEADER:
+                    if(Objects.isNull(lobbyCallback)) {
+                        break;
+                    }
+
+                    int readyPlayerIndex = getLobbyPlayerIndexByColor(Color.valueOf(data.split("/")[0]));
+                    boolean isReady = Boolean.parseBoolean(data.split("/")[1]);
+                    lobbyPlayersList.get(readyPlayerIndex).setPlayerReady(isReady);
+                    lobbyCallback.setReady(readyPlayerIndex, isReady);
+                    break;
+                case NetworkMessage.LOBBY_START_COUNTDOWN_HEADER:
+                    lobbyCallback.startGameCountdown();
                     break;
                 default:
                     throw new IllegalArgumentException("Received invalid network message");
