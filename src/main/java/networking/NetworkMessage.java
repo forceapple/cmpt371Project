@@ -55,6 +55,11 @@ public class NetworkMessage {
      *                 Uses CANVAS_CLEAR + .toString of an int indicating which canvas id to clear. Currently, it
      *                 relays which canvas to clear to all clients.
      *
+     *      Canvas Own Message:
+     *          Uses CANVAS_OWN + .toString of an int indicating which canvas id to colour in + color indicating the color
+     *          of the client who now owns the canvas.
+     *          This format is the same when sent to or from the server.
+     *
      *      Calculate Score and Results message:
      *           Sending Request to Server:
      *                 Uses SCORE_AND_RESULTS + .toString of an int indicating score of player + color indicating client Color
